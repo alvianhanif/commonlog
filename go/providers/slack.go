@@ -47,7 +47,7 @@ func (p *SlackProvider) formatMessage(message string, attachment *types.Attachme
 			// Inline content - show as expandable code block
 			filename := attachment.FileName
 			if filename == "" {
-				filename = "attachment.txt"
+				filename = "Trace Logs"
 			}
 			formatted += fmt.Sprintf("\n\n*%s:*\n```\n%s\n```", filename, attachment.Content)
 		}
@@ -70,7 +70,7 @@ func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Att
 	}
 
 	url := "https://slack.com/api/chat.postMessage"
-	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
+	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json; charset=utf-8"}
 	payload := map[string]interface{}{
 		"channel": cfg.Channel,
 		"text":    formattedMessage,

@@ -32,7 +32,7 @@ class SlackProvider(Provider):
         formatted += message
 
         if attachment and attachment.content:
-            filename = attachment.file_name or "attachment.txt"
+            filename = attachment.file_name or "Trace Logs"
             formatted += f"\n\n*{filename}:*\n```\n{attachment.content}\n```"
         if attachment and attachment.url:
             formatted += f"\n\n*Attachment:* {attachment.url}"
@@ -46,7 +46,7 @@ class SlackProvider(Provider):
             token = config.slack_token
         
         url = "https://slack.com/api/chat.postMessage"
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json; charset=utf-8"}
         payload = {"channel": config.channel, "text": formatted_message}
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code != 200:

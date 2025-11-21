@@ -83,7 +83,7 @@ class LarkProvider(Provider):
             formatted += f"**[{config.environment}]**\n"
         formatted += message
         if attachment and attachment.content:
-            filename = attachment.file_name or "attachment.txt"
+            filename = attachment.file_name or "Trace Logs"
             formatted += f"\n\n**{filename}:**\n```\n{attachment.content}\n```"
         if attachment and attachment.url:
             formatted += f"\n\n**Attachment:** {attachment.url}"

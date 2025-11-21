@@ -19,7 +19,7 @@ func getRedisClient(cfg types.Config) (*redis.Client, error) {
 	if host == "" || port == "" {
 		return nil, fmt.Errorf("RedisHost and RedisPort must be set in commonlog config")
 	}
-	addr := host + ":" + port
+	addr := "redis://" + host + ":" + port
 	return redis.NewClient(&redis.Options{
 		Addr: addr,
 	}), nil
@@ -176,7 +176,7 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 			// Inline content - show as expandable code block
 			filename := attachment.FileName
 			if filename == "" {
-				filename = "attachment.txt"
+				filename = "Trace Logs"
 			}
 			formatted += fmt.Sprintf("\n\n**%s:**\n```\n%s\n```", filename, attachment.Content)
 		}
