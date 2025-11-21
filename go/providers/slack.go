@@ -14,8 +14,6 @@ type SlackProvider struct{}
 
 func (p *SlackProvider) Send(level int, message string, attachment *types.Attachment, cfg types.Config) error {
 	switch cfg.SendMethod {
-	case types.MethodWebhook:
-		return p.sendSlackWebhook(message, attachment, cfg)
 	case types.MethodHTTP:
 		return p.sendSlackHTTP(message, attachment, cfg)
 	case types.MethodWebClient:
@@ -56,24 +54,6 @@ func (p *SlackProvider) formatMessage(message string, attachment *types.Attachme
 	}
 
 	return formatted
-}
-
-func (p *SlackProvider) sendSlackWebhook(message string, attachment *types.Attachment, cfg types.Config) error {
-	formattedMessage := p.formatMessage(message, attachment, cfg)
-	payload := map[string]interface{}{
-		"text":    formattedMessage,
-		"channel": cfg.Channel,
-	}
-	data, _ := json.Marshal(payload)
-	resp, err := http.Post(cfg.WebhookURL, "application/json", bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("slack webhook response: %d", resp.StatusCode)
-	}
-	return nil
 }
 
 func (p *SlackProvider) sendSlackHTTP(message string, attachment *types.Attachment, cfg types.Config) error {

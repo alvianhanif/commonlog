@@ -7,9 +7,7 @@ from ..unilog_types import SendMethod, Provider
 class SlackProvider(Provider):
     def send(self, level, message, attachment, config):
         formatted_message = self._format_message(message, attachment, config)
-        if config.send_method == SendMethod.WEBHOOK:
-            self._send_slack_webhook(formatted_message, config)
-        elif config.send_method == SendMethod.HTTP:
+        if config.send_method == SendMethod.HTTP:
             self._send_slack_http(formatted_message, config)
         elif config.send_method == SendMethod.WEBCLIENT:
             self._send_slack_webclient(formatted_message, config)
@@ -36,12 +34,6 @@ class SlackProvider(Provider):
             formatted += f"\n\n*Attachment:* {attachment.url}"
 
         return formatted
-
-    def _send_slack_webhook(self, formatted_message, config):
-        payload = {"text": formatted_message, "channel": config.channel}
-        response = requests.post(config.webhook_url, json=payload)
-        if response.status_code != 200:
-            raise Exception(f"Slack webhook response: {response.status_code}")
 
     def _send_slack_http(self, formatted_message, config):
         payload = {"text": formatted_message}

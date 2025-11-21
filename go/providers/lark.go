@@ -14,8 +14,6 @@ type LarkProvider struct{}
 
 func (p *LarkProvider) Send(level int, message string, attachment *types.Attachment, cfg types.Config) error {
 	switch cfg.SendMethod {
-	case types.MethodWebhook:
-		return p.sendLarkWebhook(message, attachment, cfg)
 	case types.MethodHTTP:
 		return p.sendLarkHTTP(message, attachment, cfg)
 	case types.MethodWebClient:
@@ -56,50 +54,6 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 	}
 
 	return formatted
-}
-
-func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachment, cfg types.Config) error {
-	payload := map[string]interface{}{
-		"msg_type": "text",
-		"content": map[string]string{
-			"text": message,
-		},
-	}
-	if attachment != nil {
-		if attachment.Content != "" {
-			// For inline content, use text message with formatted content
-			formattedMessage := p.formatMessage(message, attachment, cfg)
-			payload["content"] = map[string]string{
-				"text": formattedMessage,
-			}
-		} else if attachment.URL != "" {
-			// External URL attachment
-			payload["msg_type"] = "post"
-			payload["content"] = map[string]interface{}{
-				"post": map[string]interface{}{
-					"zh_cn": map[string]interface{}{
-						"title": "Message",
-						"content": [][]map[string]interface{}{
-							{
-								{"tag": "text", "text": message},
-								{"tag": "a", "text": "Attachment", "href": attachment.URL},
-							},
-						},
-					},
-				},
-			}
-		}
-	}
-	data, _ := json.Marshal(payload)
-	resp, err := http.Post(cfg.WebhookURL, "application/json", bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("lark webhook response: %d", resp.StatusCode)
-	}
-	return nil
 }
 
 func (p *LarkProvider) sendLarkHTTP(message string, attachment *types.Attachment, cfg types.Config) error {

@@ -12,7 +12,6 @@ const (
 // SendMethod defines supported sending methods
 const (
 	MethodWebClient = "webclient"
-	MethodWebhook   = "webhook"
 	MethodHTTP      = "http"
 )
 
