@@ -2,6 +2,7 @@ package providers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/alvianhanif/commonlog/go/types"
 
-	redis "github.com/go-redis/redis"
+	redis "github.com/redis/go-redis/v9"
 )
 
 // getRedisClient returns a Redis client using host/port from cfg, env, or default
@@ -21,11 +22,19 @@ func getRedisClient(cfg types.Config) (*redis.Client, error) {
 		fmt.Printf("[Lark] RedisHost and RedisPort must be set in commonlog config\n")
 		return nil, fmt.Errorf("RedisHost and RedisPort must be set in commonlog config")
 	}
-	addr := "redis://" + host + ":" + port
+	addr := host + ":" + port
 	fmt.Printf("[Lark] Connecting to Redis at address: %s\n", addr)
-	return redis.NewClient(&redis.Options{
+	client := redis.NewClient(&redis.Options{
 		Addr: addr,
-	}), nil
+		DB:   0,
+	})
+	ctx := context.Background()
+	if err := client.Ping(ctx).Err(); err != nil {
+		fmt.Printf("[Lark] Failed to ping Redis at %s: %v\n", addr, err)
+		return nil, fmt.Errorf("failed to ping Redis: %w", err)
+	}
+	fmt.Printf("[Lark] Successfully connected to Redis at %s\n", addr)
+	return client, nil
 }
 
 func cacheLarkToken(cfg types.Config, appID, appSecret, token string) error {
@@ -34,7 +43,7 @@ func cacheLarkToken(cfg types.Config, appID, appSecret, token string) error {
 	if err != nil {
 		return err
 	}
-	return client.Set(key, token, 90*time.Minute).Err()
+	return client.Set(context.Background(), key, token, 90*time.Minute).Err()
 }
 
 func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, error) {
@@ -43,7 +52,7 @@ func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	return client.Get(key).Result()
+	return client.Get(context.Background(), key).Result()
 }
 
 // getChatIDFromChannelName fetches the chat_id for a given channel name
@@ -137,7 +146,7 @@ func getTenantAccessToken(cfg types.Config, appID, appSecret string) (string, er
 	if err != nil {
 		return "", fmt.Errorf("failed to get Redis client: %w", err)
 	}
-	err = client.Set(key, result.Token, time.Duration(expireSeconds)*time.Second).Err()
+	err = client.Set(context.Background(), key, result.Token, time.Duration(expireSeconds)*time.Second).Err()
 	if err != nil {
 		return "", fmt.Errorf("failed to cache token: %w", err)
 	}
