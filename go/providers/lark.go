@@ -237,6 +237,16 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		return err
 	}
 	defer resp.Body.Close()
+
+	// Log response data
+	respBody := new(bytes.Buffer)
+	_, copyErr := respBody.ReadFrom(resp.Body)
+	if copyErr != nil {
+		fmt.Printf("[Lark] Error reading response body: %v\n", copyErr)
+	} else {
+		fmt.Printf("[Lark] Response data: %s\n", respBody.String())
+	}
+
 	if resp.StatusCode != 200 {
 		fmt.Printf("[Lark] WebClient response status: %d\n", resp.StatusCode)
 		return fmt.Errorf("lark WebClient response: %d", resp.StatusCode)

@@ -87,8 +87,13 @@ func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Att
 		return err
 	}
 	defer resp.Body.Close()
+
+	// Log response data
+	respData := new(bytes.Buffer)
+	respData.ReadFrom(resp.Body)
+	fmt.Printf("[SlackProvider] Slack WebClient response status: %d, body: %s\n", resp.StatusCode, respData.String())
+
 	if resp.StatusCode != 200 {
-		fmt.Printf("[SlackProvider] Slack WebClient response status: %d\n", resp.StatusCode)
 		return fmt.Errorf("slack WebClient response: %d", resp.StatusCode)
 	}
 	fmt.Println("[SlackProvider] Message sent successfully")
