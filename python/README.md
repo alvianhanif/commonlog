@@ -12,6 +12,7 @@ pip install unilog
 
 Or copy the `python/` directory to your project.
 
+
 ## Usage
 
 ```python
@@ -19,10 +20,12 @@ from python import Unilog, Config, SendMethod, AlertLevel, Attachment
 
 # Configure logger
 config = Config(
-    provider="slack",
+    provider="lark", # or "slack"
     send_method=SendMethod.WEBCLIENT,
-    token="xoxb-your-slack-bot-token",
-    channel="#alerts"
+    token="app_id++app_secret", # for Lark, use "app_id++app_secret" format
+    channel="your_lark_channel_id",
+    redis_host="localhost", # required for Lark
+    redis_port="6379",      # required for Lark
 )
 logger = Unilog(config)
 
@@ -32,6 +35,10 @@ logger.send(AlertLevel.ERROR, "System error occurred", Attachment(url="https://e
 # Send info (logs only)
 logger.send(AlertLevel.INFO, "Info message")
 ```
+
+### Lark Token Caching
+
+When using Lark, the tenant_access_token is cached in Redis. The expiry is set dynamically from the API response minus 10 minutes. You must set `redis_host` and `redis_port` in your config.
 
 ## Channel Mapping
 

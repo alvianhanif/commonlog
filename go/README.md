@@ -10,6 +10,7 @@ Add to your `go.mod`:
 go get gitlab.com/pasarpolis/unilog/go
 ```
 
+
 ## Usage
 
 ```go
@@ -21,10 +22,12 @@ import (
 
 func main() {
     cfg := unilog.Config{
-        Provider:   "slack",
+        Provider:   "lark", // or "slack"
         SendMethod: unilog.MethodWebClient,
-        Token:      "xoxb-your-slack-bot-token",
-        Channel:    "#alerts",
+        Token:      "app_id++app_secret", // for Lark, use "app_id++app_secret" format
+        Channel:    "your_lark_channel_id",
+        RedisHost:  "localhost", // required for Lark
+        RedisPort:  "6379",      // required for Lark
     }
     logger := unilog.NewLogger(cfg)
 
@@ -35,6 +38,10 @@ func main() {
     logger.Send(unilog.INFO, "Info message")
 }
 ```
+
+### Lark Token Caching
+
+When using Lark, the tenant_access_token is cached in Redis. The expiry is set dynamically from the API response minus 10 minutes. You must set `RedisHost` and `RedisPort` in your config.
 
 ## Channel Mapping
 
