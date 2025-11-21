@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 
 class SendMethod:
     WEBCLIENT = "webclient"
-    HTTP = "http"
 
 class AlertLevel:
     INFO = 0

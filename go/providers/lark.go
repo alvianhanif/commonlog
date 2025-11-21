@@ -14,8 +14,6 @@ type LarkProvider struct{}
 
 func (p *LarkProvider) Send(level int, message string, attachment *types.Attachment, cfg types.Config) error {
 	switch cfg.SendMethod {
-	case types.MethodHTTP:
-		return p.sendLarkHTTP(message, attachment, cfg)
 	case types.MethodWebClient:
 		return p.sendLarkWebClient(message, attachment, cfg)
 	default:
@@ -54,26 +52,6 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 	}
 
 	return formatted
-}
-
-func (p *LarkProvider) sendLarkHTTP(message string, attachment *types.Attachment, cfg types.Config) error {
-	formattedMessage := p.formatMessage(message, attachment, cfg)
-	payload := map[string]interface{}{
-		"msg_type": "text",
-		"content": map[string]string{
-			"text": formattedMessage,
-		},
-	}
-	data, _ := json.Marshal(payload)
-	resp, err := http.Post(cfg.HTTPURL, "application/json", bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("lark HTTP response: %d", resp.StatusCode)
-	}
-	return nil
 }
 
 func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attachment, cfg types.Config) error {

@@ -12,7 +12,6 @@ const (
 // SendMethod defines supported sending methods
 const (
 	MethodWebClient = "webclient"
-	MethodHTTP      = "http"
 )
 
 // ChannelResolver defines an interface for resolving channels based on alert levels

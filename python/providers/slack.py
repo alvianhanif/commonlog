@@ -7,9 +7,7 @@ from ..unilog_types import SendMethod, Provider
 class SlackProvider(Provider):
     def send(self, level, message, attachment, config):
         formatted_message = self._format_message(message, attachment, config)
-        if config.send_method == SendMethod.HTTP:
-            self._send_slack_http(formatted_message, config)
-        elif config.send_method == SendMethod.WEBCLIENT:
+        if config.send_method == SendMethod.WEBCLIENT:
             self._send_slack_webclient(formatted_message, config)
         else:
             raise ValueError(f"Unknown send method for Slack: {config.send_method}")
@@ -34,12 +32,6 @@ class SlackProvider(Provider):
             formatted += f"\n\n*Attachment:* {attachment.url}"
 
         return formatted
-
-    def _send_slack_http(self, formatted_message, config):
-        payload = {"text": formatted_message}
-        response = requests.post(config.http_url, json=payload)
-        if response.status_code != 200:
-            raise Exception(f"Slack HTTP response: {response.status_code}")
 
     def _send_slack_webclient(self, formatted_message, config):
         url = "https://slack.com/api/chat.postMessage"
