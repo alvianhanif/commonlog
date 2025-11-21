@@ -54,7 +54,6 @@ type Attachment struct {
 	Content  string // Inline content for text attachments
 }
 
-
 // Provider interface for alert providers
 type Provider interface {
 	Send(level int, message string, attachment *Attachment, cfg Config) error
