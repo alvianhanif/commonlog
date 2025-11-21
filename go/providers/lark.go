@@ -193,21 +193,27 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	formattedMessage := p.formatMessage(message, attachment, cfg)
 	token := cfg.Token
 
+	fmt.Printf("[Lark] Sending message to channel '%s' with method WebClient\n", cfg.Channel)
+
 	// Use LarkToken if available, otherwise fall back to Token parsing
 	var appID, appSecret string
 	if cfg.LarkToken.AppID != "" && cfg.LarkToken.AppSecret != "" {
 		appID = cfg.LarkToken.AppID
 		appSecret = cfg.LarkToken.AppSecret
+		fmt.Printf("[Lark] Fetching tenant access token for appID '%s'\n", appID)
 		fetched, err := getTenantAccessToken(cfg, appID, appSecret)
 		if err != nil {
+			fmt.Printf("[Lark] Error fetching tenant access token: %v\n", err)
 			return err
 		}
 		token = fetched
 	}
 
 	// Get chat_id from channel name
+	fmt.Printf("[Lark] Resolving chat_id for channel '%s'\n", cfg.Channel)
 	chatID, err := getChatIDFromChannelName(cfg, token, cfg.Channel)
 	if err != nil {
+		fmt.Printf("[Lark] Failed to get chat_id for channel '%s': %v\n", cfg.Channel, err)
 		return fmt.Errorf("failed to get chat_id for channel '%s': %v", cfg.Channel, err)
 	}
 
@@ -224,13 +230,17 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
+	fmt.Printf("[Lark] Sending POST request to %s\n", url)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		fmt.Printf("[Lark] Error sending POST request: %v\n", err)
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
+		fmt.Printf("[Lark] WebClient response status: %d\n", resp.StatusCode)
 		return fmt.Errorf("lark WebClient response: %d", resp.StatusCode)
 	}
+	fmt.Printf("[Lark] Message sent successfully to channel '%s'\n", cfg.Channel)
 	return nil
 }

@@ -76,17 +76,21 @@ func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Att
 		"text":    formattedMessage,
 	}
 	data, _ := json.Marshal(payload)
+	fmt.Printf("[SlackProvider] Sending to channel: %s, payload: %s\n", cfg.Channel, string(data))
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		fmt.Printf("[SlackProvider] Error sending request: %v\n", err)
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
+		fmt.Printf("[SlackProvider] Slack WebClient response status: %d\n", resp.StatusCode)
 		return fmt.Errorf("slack WebClient response: %d", resp.StatusCode)
 	}
+	fmt.Println("[SlackProvider] Message sent successfully")
 	return nil
 }
