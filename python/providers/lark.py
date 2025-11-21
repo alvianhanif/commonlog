@@ -8,11 +8,7 @@ from ..unilog_types import SendMethod, Provider
 class LarkProvider(Provider):
     def send(self, level, message, attachment, config):
         formatted_message = self._format_message(message, attachment, config)
-        if config.send_method == SendMethod.WEBHOOK:
-            self._send_lark_webhook(formatted_message, config)
-        elif config.send_method == SendMethod.HTTP:
-            self._send_lark_http(formatted_message, config)
-        elif config.send_method == SendMethod.WEBCLIENT:
+        if config.send_method == SendMethod.WEBCLIENT:
             self._send_lark_webclient(formatted_message, config)
         else:
             raise ValueError(f"Unknown send method for Lark: {config.send_method}")
@@ -37,18 +33,6 @@ class LarkProvider(Provider):
             formatted += f"\n\n**Attachment:** {attachment.url}"
 
         return formatted
-
-    def _send_lark_webhook(self, formatted_message, config):
-        payload = {"msg_type": "text", "content": {"text": formatted_message}}
-        response = requests.post(config.webhook_url, json=payload)
-        if response.status_code != 200:
-            raise Exception(f"Lark webhook response: {response.status_code}")
-
-    def _send_lark_http(self, formatted_message, config):
-        payload = {"msg_type": "text", "content": {"text": formatted_message}}
-        response = requests.post(config.http_url, json=payload)
-        if response.status_code != 200:
-            raise Exception(f"Lark HTTP response: {response.status_code}")
 
     def _send_lark_webclient(self, formatted_message, config):
         url = "https://open.larksuite.com/open-apis/im/v1/messages"
