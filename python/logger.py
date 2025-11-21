@@ -33,6 +33,37 @@ class commonlog:
         except Exception as e:
             logging.error(f"Failed to send alert: {e}")
 
+    def custom_send(self, provider, level, message, attachment=None, trace="", channel=None):
+        if provider == "slack":
+            custom_provider = SlackProvider()
+        elif provider == "lark":
+            custom_provider = LarkProvider()
+        else:
+            logging.warning(f"Unknown provider: {provider}, defaulting to Slack")
+            custom_provider = SlackProvider()
+
+        if level == AlertLevel.INFO:
+            logging.info(message)
+            return
+        try:
+            # Use provided channel or fallback to resolved channel
+            target_channel = channel if channel else self._resolve_channel(level)
+            original_channel = self.config.channel
+            self.config.channel = target_channel
+            if trace:
+                if attachment is None:
+                    attachment = Attachment(content=trace, file_name="trace.log")
+                else:
+                    if attachment.content:
+                        attachment.content += "\n\n--- Trace Log ---\n" + trace
+                    else:
+                        attachment.content = trace
+                        attachment.file_name = "trace.log"
+            custom_provider.send(level, message, attachment, self.config)
+            self.config.channel = original_channel
+        except Exception as e:
+            logging.error(f"Failed to send alert: {e}")
+
     def __init__(self, config):
         self.config = config
         if config.provider == "slack":

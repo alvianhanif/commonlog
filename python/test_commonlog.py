@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
 from logger import commonlog
-from commonlog_types import Config, SendMethod, AlertLevel, Attachment
+from log_types import Config, SendMethod, AlertLevel, Attachment
 
 class Testcommonlog(unittest.TestCase):
     def test_init(self):

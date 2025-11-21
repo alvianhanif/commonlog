@@ -80,3 +80,51 @@ func (l *Logger) SendToChannel(level int, message string, attachment *types.Atta
 		log.Printf("[ERROR] Failed to send alert: %v", err)
 	}
 }
+
+// CustomSend sends a message with a custom provider, allowing override of the default provider
+func (l *Logger) CustomSend(provider string, level int, message string, attachment *types.Attachment, trace string, channel string) {
+	var customProvider types.Provider
+	switch provider {
+	case "slack":
+		customProvider = &providers.SlackProvider{}
+	case "lark":
+		customProvider = &providers.LarkProvider{}
+	default:
+		log.Printf("[ERROR] Unknown provider: %s, defaulting to slack", provider)
+		customProvider = &providers.SlackProvider{}
+	}
+
+	if level == types.INFO {
+		log.Printf("[INFO] %s", message)
+		return
+	}
+
+	resolvedChannel := channel
+	if resolvedChannel == "" {
+		resolvedChannel = l.resolveChannel(level)
+	}
+
+	sendConfig := l.config
+	sendConfig.Channel = resolvedChannel
+
+	if trace != "" {
+		traceAttachment := &types.Attachment{
+			FileName: "trace.log",
+			Content:  trace,
+		}
+		if attachment != nil {
+			if attachment.Content != "" {
+				attachment.Content += "\n\n--- Trace Log ---\n" + trace
+			} else {
+				attachment.Content = trace
+				attachment.FileName = "trace.log"
+			}
+		} else {
+			attachment = traceAttachment
+		}
+	}
+
+	if err := customProvider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel); err != nil {
+		log.Printf("[ERROR] Failed to send alert: %v", err)
+	}
+}
