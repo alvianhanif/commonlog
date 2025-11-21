@@ -5,6 +5,7 @@ package pasarpolis
 import (
 	"fmt"
 	"log"
+	"os"
 
 	unilog "gitlab.com/pasarpolis/unilog/go"
 	"gitlab.com/pasarpolis/unilog/go/types"
@@ -201,7 +202,5 @@ func getDefaultChannelResolver(env Environment) types.ChannelResolver {
 
 // getEnvVar gets environment variable with fallback
 func getEnvVar(key string) string {
-	// In a real implementation, this would use os.Getenv(key)
-	// For now, return empty string to indicate env var should be set
-	return ""
+	return os.Getenv(key)
 }

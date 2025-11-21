@@ -8,6 +8,7 @@ with sensible defaults.
 from typing import Optional, Callable
 from enum import Enum
 import logging
+import os
 
 from unilog.python import Unilog, Config, SendMethod, AlertLevel, DefaultChannelResolver, Attachment
 
@@ -210,5 +211,4 @@ class Client:
     @staticmethod
     def _get_env_var(key: str) -> Optional[str]:
         """Get environment variable."""
-        import os
         return os.getenv(key)
