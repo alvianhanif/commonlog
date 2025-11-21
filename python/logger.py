@@ -3,7 +3,7 @@ Main logger for commonlog
 """
 import logging
 from .providers import SlackProvider, LarkProvider
-from .commonlog_types import AlertLevel, Attachment
+from .log_types import AlertLevel, Attachment
 
 # ====================
 # Configuration and Logger

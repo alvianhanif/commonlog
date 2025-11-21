@@ -3,7 +3,7 @@ Lark Provider for commonlog
 """
 import requests
 import json
-from ..commonlog_types import SendMethod, Provider
+from ..log_types import SendMethod, Provider
 from .redis_client import get_redis_client, RedisConfigError
 
 class LarkProvider(Provider):
