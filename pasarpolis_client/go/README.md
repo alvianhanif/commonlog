@@ -31,10 +31,10 @@ func main() {
 
 ## Environment Variables
 
-Set the following environment variables for webhook URLs:
+Set the following environment variables for API tokens:
 
-- `PASARPOLIS_SLACK_WEBHOOK_URL`: Slack webhook URL
-- `PASARPOLIS_LARK_WEBHOOK_URL`: Lark webhook URL
+- `PASARPOLIS_SLACK_TOKEN`: Slack bot token (starts with `xoxb-`)
+- `PASARPOLIS_LARK_TOKEN`: Lark app token
 
 ## Default Channel Mappings
 

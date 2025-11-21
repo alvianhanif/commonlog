@@ -50,24 +50,24 @@ func NewClient(serviceName string, env Environment, provider Provider) (*Client,
 	// Set default send method and credentials based on provider
 	switch provider {
 	case ProviderLark:
-		config.SendMethod = types.MethodWebhook
-		// Default Lark webhook URL - should be configured via environment variables
+		config.SendMethod = types.MethodWebClient
+		// Default Lark app token - should be configured via environment variables
 		if env == EnvUnittest {
-			config.WebhookURL = "unittest://dummy-lark"
-		} else if webhookURL := getEnvVar("PASARPOLIS_LARK_WEBHOOK_URL"); webhookURL != "" {
-			config.WebhookURL = webhookURL
+			config.Token = "unittest-dummy-lark-token"
+		} else if token := getEnvVar("PASARPOLIS_LARK_TOKEN"); token != "" {
+			config.Token = token
 		} else {
-			return nil, fmt.Errorf("PASARPOLIS_LARK_WEBHOOK_URL environment variable not set")
+			return nil, fmt.Errorf("PASARPOLIS_LARK_TOKEN environment variable not set")
 		}
 	case ProviderSlack:
-		config.SendMethod = types.MethodWebhook
-		// Default Slack webhook URL - should be configured via environment variables
+		config.SendMethod = types.MethodWebClient
+		// Default Slack bot token - should be configured via environment variables
 		if env == EnvUnittest {
-			config.WebhookURL = "unittest://dummy-slack"
-		} else if webhookURL := getEnvVar("PASARPOLIS_SLACK_WEBHOOK_URL"); webhookURL != "" {
-			config.WebhookURL = webhookURL
+			config.Token = "unittest-dummy-slack-token"
+		} else if token := getEnvVar("PASARPOLIS_SLACK_TOKEN"); token != "" {
+			config.Token = token
 		} else {
-			return nil, fmt.Errorf("PASARPOLIS_SLACK_WEBHOOK_URL environment variable not set")
+			return nil, fmt.Errorf("PASARPOLIS_SLACK_TOKEN environment variable not set")
 		}
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", provider)

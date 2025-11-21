@@ -52,7 +52,7 @@ class Client:
         """
         config = Config(
             provider=provider.value,
-            send_method=SendMethod.WEBHOOK,  # Default to webhook for simplicity
+            send_method=SendMethod.WEBCLIENT,  # Default to webclient
             service_name=service_name,
             environment=env.value,
         )
@@ -63,27 +63,27 @@ class Client:
 
         # Set default send method and credentials based on provider
         if provider == Provider.LARK:
-            config.send_method = SendMethod.WEBHOOK
-            # Default Lark webhook URL - should be configured via environment variables
+            config.send_method = SendMethod.WEBCLIENT
+            # Default Lark app token - should be configured via environment variables
             if env == Environment.UNITTEST:
-                config.webhook_url = "unittest://dummy-lark"
+                config.token = "unittest-dummy-lark-token"
             else:
-                webhook_url = cls._get_env_var("PASARPOLIS_LARK_WEBHOOK_URL")
-                if webhook_url:
-                    config.webhook_url = webhook_url
+                token = cls._get_env_var("PASARPOLIS_LARK_TOKEN")
+                if token:
+                    config.token = token
                 else:
-                    raise ValueError("PASARPOLIS_LARK_WEBHOOK_URL environment variable not set")
+                    raise ValueError("PASARPOLIS_LARK_TOKEN environment variable not set")
         elif provider == Provider.SLACK:
-            config.send_method = SendMethod.WEBHOOK
-            # Default Slack webhook URL - should be configured via environment variables
+            config.send_method = SendMethod.WEBCLIENT
+            # Default Slack bot token - should be configured via environment variables
             if env == Environment.UNITTEST:
-                config.webhook_url = "unittest://dummy-slack"
+                config.token = "unittest-dummy-slack-token"
             else:
-                webhook_url = cls._get_env_var("PASARPOLIS_SLACK_WEBHOOK_URL")
-                if webhook_url:
-                    config.webhook_url = webhook_url
+                token = cls._get_env_var("PASARPOLIS_SLACK_TOKEN")
+                if token:
+                    config.token = token
                 else:
-                    raise ValueError("PASARPOLIS_SLACK_WEBHOOK_URL environment variable not set")
+                    raise ValueError("PASARPOLIS_SLACK_TOKEN environment variable not set")
         else:
             raise ValueError(f"Unsupported provider: {provider}")
 
