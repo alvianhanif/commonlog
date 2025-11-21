@@ -16,10 +16,13 @@ import (
 func getRedisClient(cfg types.Config) (*redis.Client, error) {
 	host := cfg.RedisHost
 	port := cfg.RedisPort
+	fmt.Printf("[Lark] Initializing Redis client with host: '%s', port: '%s'\n", host, port)
 	if host == "" || port == "" {
+		fmt.Printf("[Lark] RedisHost and RedisPort must be set in commonlog config\n")
 		return nil, fmt.Errorf("RedisHost and RedisPort must be set in commonlog config")
 	}
 	addr := "redis://" + host + ":" + port
+	fmt.Printf("[Lark] Connecting to Redis at address: %s\n", addr)
 	return redis.NewClient(&redis.Options{
 		Addr: addr,
 	}), nil
