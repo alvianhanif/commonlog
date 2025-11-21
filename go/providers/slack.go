@@ -13,11 +13,17 @@ import (
 type SlackProvider struct{}
 
 func (p *SlackProvider) Send(level int, message string, attachment *types.Attachment, cfg types.Config) error {
-	switch cfg.SendMethod {
+	return p.SendToChannel(level, message, attachment, cfg, cfg.Channel)
+}
+
+func (p *SlackProvider) SendToChannel(level int, message string, attachment *types.Attachment, cfg types.Config, channel string) error {
+	cfgCopy := cfg
+	cfgCopy.Channel = channel
+	switch cfgCopy.SendMethod {
 	case types.MethodWebClient:
-		return p.sendSlackWebClient(message, attachment, cfg)
+		return p.sendSlackWebClient(message, attachment, cfgCopy)
 	default:
-		return fmt.Errorf("unknown send method for Slack: %s", cfg.SendMethod)
+		return fmt.Errorf("unknown send method for Slack: %s", cfgCopy.SendMethod)
 	}
 }
 

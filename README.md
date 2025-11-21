@@ -5,6 +5,7 @@ A unified logging and alerting library supporting Slack and Lark integrations vi
 Available in [Go](./go/README.md) and [Python](./python/README.md).
 
 
+
 ## Features
 
 - **Multi-Provider**: Slack and Lark
@@ -13,6 +14,7 @@ Available in [Go](./go/README.md) and [Python](./python/README.md).
 - **File Attachments**: Public URL attachments
 - **Trace Log Section**: Optional detailed trace information in alerts
 - **Extensible**: Easy to add new alert providers
+- **Send to Specific Channel**: Use `SendToChannel` (Go) or `send_to_channel` (Python) to override the default channel for any alert.
 - **Redis Token Caching for Lark**: Lark tenant_access_token is cached in Redis for performance. Expiry is set dynamically from the API response minus 10 minutes.
 
 ## Redis Configuration (Lark)

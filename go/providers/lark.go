@@ -98,11 +98,17 @@ func getTenantAccessToken(cfg types.Config, appID, appSecret string) (string, er
 }
 
 func (p *LarkProvider) Send(level int, message string, attachment *types.Attachment, cfg types.Config) error {
-	switch cfg.SendMethod {
+	return p.SendToChannel(level, message, attachment, cfg, cfg.Channel)
+}
+
+func (p *LarkProvider) SendToChannel(level int, message string, attachment *types.Attachment, cfg types.Config, channel string) error {
+	cfgCopy := cfg
+	cfgCopy.Channel = channel
+	switch cfgCopy.SendMethod {
 	case types.MethodWebClient:
-		return p.sendLarkWebClient(message, attachment, cfg)
+		return p.sendLarkWebClient(message, attachment, cfgCopy)
 	default:
-		return fmt.Errorf("unknown send method for Lark: %s", cfg.SendMethod)
+		return fmt.Errorf("unknown send method for Lark: %s", cfgCopy.SendMethod)
 	}
 }
 

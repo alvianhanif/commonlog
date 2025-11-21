@@ -41,25 +41,29 @@ func (l *Logger) resolveChannel(level int) string {
 
 // Send sends a message with alert level, optional attachment, and optional trace log
 func (l *Logger) Send(level int, message string, attachment *types.Attachment, trace string) {
+	l.SendToChannel(level, message, attachment, trace, "")
+}
+
+// SendToChannel sends a message to a specific channel, overriding the default/channel resolver
+func (l *Logger) SendToChannel(level int, message string, attachment *types.Attachment, trace string, channel string) {
 	if level == types.INFO {
 		log.Printf("[INFO] %s", message)
 		return
 	}
 
-	// Resolve the channel for this alert level
-	resolvedChannel := l.resolveChannel(level)
+	resolvedChannel := channel
+	if resolvedChannel == "" {
+		resolvedChannel = l.resolveChannel(level)
+	}
 
-	// Create a config with the resolved channel for this send operation
 	sendConfig := l.config
 	sendConfig.Channel = resolvedChannel
 
-	// If trace is provided, create a trace attachment
 	if trace != "" {
 		traceAttachment := &types.Attachment{
 			FileName: "trace.log",
 			Content:  trace,
 		}
-		// If there's already an attachment, combine the trace content
 		if attachment != nil {
 			if attachment.Content != "" {
 				attachment.Content += "\n\n--- Trace Log ---\n" + trace
@@ -72,7 +76,7 @@ func (l *Logger) Send(level int, message string, attachment *types.Attachment, t
 		}
 	}
 
-	if err := l.provider.Send(level, message, attachment, sendConfig); err != nil {
+	if err := l.provider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel); err != nil {
 		log.Printf("[ERROR] Failed to send alert: %v", err)
 	}
 }

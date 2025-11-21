@@ -36,6 +36,9 @@ func main() {
 
     // Send info (logs only)
     logger.Send(unilog.INFO, "Info message")
+
+    // Send to a specific channel
+    logger.SendToChannel(unilog.ERROR, "Send to another channel", nil, "", "another-channel-id")
 }
 ```
 

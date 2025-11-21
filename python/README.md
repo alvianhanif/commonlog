@@ -32,8 +32,11 @@ logger = Unilog(config)
 # Send error with attachment
 logger.send(AlertLevel.ERROR, "System error occurred", Attachment(url="https://example.com/log.txt"))
 
-# Send info (logs only)
+ # Send info (logs only)
 logger.send(AlertLevel.INFO, "Info message")
+
+# Send to a specific channel
+logger.send_to_channel(AlertLevel.ERROR, "Send to another channel", channel="another-channel-id")
 ```
 
 ### Lark Token Caching

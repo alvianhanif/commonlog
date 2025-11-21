@@ -5,6 +5,11 @@ import requests
 from ..unilog_types import SendMethod, Provider
 
 class SlackProvider(Provider):
+        def send_to_channel(self, level, message, attachment, config, channel):
+            original_channel = config.channel
+            config.channel = channel
+            self.send(level, message, attachment, config)
+            config.channel = original_channel
     def send(self, level, message, attachment, config):
         formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
