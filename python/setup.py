@@ -1,8 +1,16 @@
 from setuptools import setup, find_packages
+import subprocess
+
+def get_latest_git_tag():
+    try:
+        tag = subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"]).decode().strip()
+        return tag
+    except Exception:
+        return "0.0.0"
 
 setup(
     name="commonlog",
-    version="0.1.3",
+    version=get_latest_git_tag(),
     description="Unified logging and alerting library for Python.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
