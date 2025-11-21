@@ -148,15 +148,28 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
 	formattedMessage := p.formatMessage(message, attachment, cfg)
 	token := cfg.Token
-	// If token is in "app_id++app_secret" format, fetch the tenant_access_token
-	if len(token) > 0 && len(token) < 100 && bytes.Contains([]byte(token), []byte("++")) {
-		parts := bytes.Split([]byte(token), []byte("++"))
-		if len(parts) == 2 {
-			fetched, err := getTenantAccessToken(cfg, string(parts[0]), string(parts[1]))
-			if err != nil {
-				return err
+
+	// Use LarkToken if available, otherwise fall back to Token parsing
+	var appID, appSecret string
+	if cfg.LarkToken.AppID != "" && cfg.LarkToken.AppSecret != "" {
+		appID = cfg.LarkToken.AppID
+		appSecret = cfg.LarkToken.AppSecret
+		fetched, err := getTenantAccessToken(cfg, appID, appSecret)
+		if err != nil {
+			return err
+		}
+		token = fetched
+	} else {
+		// If token is in "app_id++app_secret" format, fetch the tenant_access_token
+		if len(token) > 0 && len(token) < 100 && bytes.Contains([]byte(token), []byte("++")) {
+			parts := bytes.Split([]byte(token), []byte("++"))
+			if len(parts) == 2 {
+				fetched, err := getTenantAccessToken(cfg, string(parts[0]), string(parts[1]))
+				if err != nil {
+					return err
+				}
+				token = fetched
 			}
-			token = fetched
 		}
 	}
 	url := "https://open.larksuite.com/open-apis/im/v1/messages"

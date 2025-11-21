@@ -40,8 +40,13 @@ class SlackProvider(Provider):
         return formatted
 
     def _send_slack_webclient(self, formatted_message, config):
+        # Use slack_token if available, otherwise fall back to token
+        token = config.token
+        if config.slack_token:
+            token = config.slack_token
+        
         url = "https://slack.com/api/chat.postMessage"
-        headers = {"Authorization": f"Bearer {config.token}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         payload = {"channel": config.channel, "text": formatted_message}
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code != 200:

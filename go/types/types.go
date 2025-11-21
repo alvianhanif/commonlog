@@ -37,12 +37,20 @@ type Config struct {
 	Provider        string          // "slack" or "lark"
 	SendMethod      string          // "webclient", "webhook", "http"
 	Token           string          // API token for SDK/webclient
+	SlackToken      string          // Slack-specific token
+	LarkToken       LarkTokenConfig // Lark-specific token configuration
 	Channel         string          // Default channel or chat ID (used if no resolver)
 	ChannelResolver ChannelResolver // Optional resolver for dynamic channel mapping
 	ServiceName     string          // Name of the service sending alerts
 	Environment     string          // Environment (dev, staging, production)
 	RedisHost       string          // Redis host for token caching
 	RedisPort       string          // Redis port for token caching
+}
+
+// LarkTokenConfig holds Lark app credentials
+type LarkTokenConfig struct {
+	AppID     string
+	AppSecret string
 }
 
 // Attachment represents a file attachment

@@ -62,8 +62,15 @@ func (p *SlackProvider) formatMessage(message string, attachment *types.Attachme
 
 func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
 	formattedMessage := p.formatMessage(message, attachment, cfg)
+
+	// Use SlackToken if available, otherwise fall back to Token
+	token := cfg.Token
+	if cfg.SlackToken != "" {
+		token = cfg.SlackToken
+	}
+
 	url := "https://slack.com/api/chat.postMessage"
-	headers := map[string]string{"Authorization": "Bearer " + cfg.Token, "Content-Type": "application/json"}
+	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
 	payload := map[string]interface{}{
 		"channel": cfg.Channel,
 		"text":    formattedMessage,

@@ -30,11 +30,18 @@ class DefaultChannelResolver(ChannelResolver):
     def resolve_channel(self, level):
         return self.channel_map.get(level, self.default_channel)
 
+class LarkToken:
+    def __init__(self, app_id=None, app_secret=None):
+        self.app_id = app_id
+        self.app_secret = app_secret
+
 class Config:
-    def __init__(self, provider, send_method, token=None, channel=None, channel_resolver=None, service_name=None, environment=None, redis_host=None, redis_port=None):
+    def __init__(self, provider, send_method, token=None, slack_token=None, lark_token=None, channel=None, channel_resolver=None, service_name=None, environment=None, redis_host=None, redis_port=None):
         self.provider = provider
         self.send_method = send_method
         self.token = token
+        self.slack_token = slack_token
+        self.lark_token = lark_token
         self.channel = channel
         self.channel_resolver = channel_resolver
         self.service_name = service_name
