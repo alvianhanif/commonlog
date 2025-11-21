@@ -1,6 +1,6 @@
 module gitlab.com/pasarpolis/unilog/pasarpolis_client/go
 
-go 1.20
+go 1.19
 
 require gitlab.com/pasarpolis/unilog/go v0.0.0
 

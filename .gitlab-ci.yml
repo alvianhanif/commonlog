@@ -6,7 +6,7 @@ stages:
 
 go_test:
   stage: test
-  image: golang:1.20
+  image: golang:1.19
   script:
     - cd go
     - go mod tidy
@@ -17,7 +17,7 @@ go_test:
 
 python_test:
   stage: test
-  image: python:3.11
+  image: python:3.6
   script:
     - cd python
     - pip install -r requirements.txt
