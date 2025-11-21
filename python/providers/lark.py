@@ -4,8 +4,43 @@ Lark Provider for unilog
 import requests
 import json
 from ..unilog_types import SendMethod, Provider
+from .redis_client import get_redis_client, RedisConfigError
 
 class LarkProvider(Provider):
+    def cache_lark_token(self, config, app_id, app_secret, token, expire):
+        key = f"unilog_lark_token:{app_id}:{app_secret}"
+        try:
+            client = get_redis_client(config)
+        except RedisConfigError as e:
+            raise Exception(f"Redis config error: {e}")
+        expire_seconds = expire - 600
+        if expire_seconds <= 0:
+            expire_seconds = 60
+        client.setex(key, expire_seconds, token)
+
+    def get_cached_lark_token(self, config, app_id, app_secret):
+        key = f"unilog_lark_token:{app_id}:{app_secret}"
+        try:
+            client = get_redis_client(config)
+        except RedisConfigError as e:
+            raise Exception(f"Redis config error: {e}")
+        return client.get(key)
+
+    def get_tenant_access_token(self, config, app_id, app_secret):
+        cached = self.get_cached_lark_token(config, app_id, app_secret)
+        if cached:
+            return cached
+        url = "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal"
+        payload = {"app_id": app_id, "app_secret": app_secret}
+        response = requests.post(url, json=payload)
+        result = response.json()
+        if result.get("code", 1) != 0:
+            raise Exception(f"lark token error: {result.get('msg')}")
+        token = result.get("tenant_access_token")
+        expire = result.get("expire", 0)
+        self.cache_lark_token(config, app_id, app_secret, token, expire)
+        return token
+
     def send(self, level, message, attachment, config):
         formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
@@ -35,8 +70,14 @@ class LarkProvider(Provider):
         return formatted
 
     def _send_lark_webclient(self, formatted_message, config):
+        token = config.token
+        # If token is in "app_id++app_secret" format, fetch the tenant_access_token
+        if token and len(token) < 100 and "++" in token:
+            parts = token.split("++")
+            if len(parts) == 2:
+                token = self.get_tenant_access_token(config, parts[0], parts[1])
         url = "https://open.larksuite.com/open-apis/im/v1/messages"
-        headers = {"Authorization": f"Bearer {config.token}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         content = json.dumps({"text": formatted_message})
         payload = {"receive_id": config.channel, "msg_type": "text", "content": content}
         response = requests.post(url, headers=headers, json=payload)

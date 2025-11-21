@@ -43,6 +43,8 @@ type Config struct {
 	ChannelResolver ChannelResolver // Optional resolver for dynamic channel mapping
 	ServiceName     string          // Name of the service sending alerts
 	Environment     string          // Environment (dev, staging, production)
+	RedisHost       string          // Redis host for token caching
+	RedisPort       string          // Redis port for token caching
 }
 
 // Attachment represents a file attachment
