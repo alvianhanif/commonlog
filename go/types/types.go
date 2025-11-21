@@ -1,0 +1,60 @@
+// Package unilog provides a unified logging and alerting library
+// supporting multiple providers like Slack and Lark with various send methods.
+package types
+
+// AlertLevel defines the severity of the alert
+const (
+	INFO = iota
+	WARN
+	ERROR
+)
+
+// SendMethod defines supported sending methods
+const (
+	MethodWebClient = "webclient"
+	MethodWebhook   = "webhook"
+	MethodHTTP      = "http"
+)
+
+// ChannelResolver defines an interface for resolving channels based on alert levels
+type ChannelResolver interface {
+	ResolveChannel(level int) string
+}
+
+// DefaultChannelResolver provides a simple map-based channel resolution
+type DefaultChannelResolver struct {
+	ChannelMap     map[int]string
+	DefaultChannel string
+}
+
+func (r *DefaultChannelResolver) ResolveChannel(level int) string {
+	if channel, exists := r.ChannelMap[level]; exists {
+		return channel
+	}
+	return r.DefaultChannel
+}
+
+// Config holds configuration for the library
+type Config struct {
+	Provider        string          // "slack" or "lark"
+	SendMethod      string          // "webclient", "webhook", "http"
+	Token           string          // API token for SDK/webclient
+	WebhookURL      string          // Webhook URL for webhook method
+	HTTPURL         string          // HTTP endpoint for direct method
+	Channel         string          // Default channel or chat ID (used if no resolver)
+	ChannelResolver ChannelResolver // Optional resolver for dynamic channel mapping
+	ServiceName     string          // Name of the service sending alerts
+	Environment     string          // Environment (dev, staging, production)
+}
+
+// Attachment represents a file attachment
+type Attachment struct {
+	URL      string // Public URL for external files
+	FileName string // Optional file name
+	Content  string // Inline content for text attachments
+}
+
+// Provider interface for alert providers
+type Provider interface {
+	Send(level int, message string, attachment *Attachment, cfg Config) error
+}
