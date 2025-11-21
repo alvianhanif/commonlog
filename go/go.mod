@@ -1,6 +1,6 @@
-module gitlab.com/pasarpolis/commonlog/go
+module github.com/alvianhanif/commonlog/go
 
-go 1.23.0
+go 1.19.0
 
 require github.com/go-redis/redis v6.15.8+incompatible
 
