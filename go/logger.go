@@ -1,10 +1,10 @@
-package unilog
+package commonlog
 
 import (
 	"log"
 
-	"gitlab.com/pasarpolis/unilog/go/providers"
-	"gitlab.com/pasarpolis/unilog/go/types"
+	"gitlab.com/pasarpolis/commonlog/go/providers"
+	"gitlab.com/pasarpolis/commonlog/go/types"
 )
 
 // ====================

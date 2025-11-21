@@ -1,15 +1,15 @@
 """
-Main logger for unilog
+Main logger for commonlog
 """
 import logging
 from .providers import SlackProvider, LarkProvider
-from .unilog_types import AlertLevel, Attachment
+from .commonlog_types import AlertLevel, Attachment
 
 # ====================
 # Configuration and Logger
 # ====================
 
-class Unilog:
+class commonlog:
     def send_to_channel(self, level, message, attachment=None, trace="", channel=None):
         if level == AlertLevel.INFO:
             logging.info(message)

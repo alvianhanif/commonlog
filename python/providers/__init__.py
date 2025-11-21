@@ -1,5 +1,5 @@
 """
-Providers package for unilog
+Providers package for commonlog
 """
 from .slack import SlackProvider
 from .lark import LarkProvider

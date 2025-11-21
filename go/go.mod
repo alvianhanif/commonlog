@@ -1,4 +1,4 @@
-module gitlab.com/pasarpolis/unilog/go
+module gitlab.com/pasarpolis/commonlog/go
 
 go 1.23.0
 

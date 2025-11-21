@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.com/pasarpolis/unilog/go/types"
+	"gitlab.com/pasarpolis/commonlog/go/types"
 
 	redis "github.com/go-redis/redis"
 )
@@ -17,7 +17,7 @@ func getRedisClient(cfg types.Config) (*redis.Client, error) {
 	host := cfg.RedisHost
 	port := cfg.RedisPort
 	if host == "" || port == "" {
-		return nil, fmt.Errorf("RedisHost and RedisPort must be set in unilog config")
+		return nil, fmt.Errorf("RedisHost and RedisPort must be set in commonlog config")
 	}
 	addr := host + ":" + port
 	return redis.NewClient(&redis.Options{
@@ -26,7 +26,7 @@ func getRedisClient(cfg types.Config) (*redis.Client, error) {
 }
 
 func cacheLarkToken(cfg types.Config, appID, appSecret, token string) error {
-	key := "unilog_lark_token:" + appID + ":" + appSecret
+	key := "commonlog_lark_token:" + appID + ":" + appSecret
 	client, err := getRedisClient(cfg)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func cacheLarkToken(cfg types.Config, appID, appSecret, token string) error {
 }
 
 func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, error) {
-	key := "unilog_lark_token:" + appID + ":" + appSecret
+	key := "commonlog_lark_token:" + appID + ":" + appSecret
 	client, err := getRedisClient(cfg)
 	if err != nil {
 		return "", err
@@ -85,7 +85,7 @@ func getTenantAccessToken(cfg types.Config, appID, appSecret string) (string, er
 	if expireSeconds <= 0 {
 		expireSeconds = 60 // fallback to 1 minute if API returns too low
 	}
-	key := "unilog_lark_token:" + appID + ":" + appSecret
+	key := "commonlog_lark_token:" + appID + ":" + appSecret
 	client, err := getRedisClient(cfg)
 	if err != nil {
 		return "", fmt.Errorf("failed to get Redis client: %w", err)

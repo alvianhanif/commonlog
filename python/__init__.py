@@ -1,10 +1,10 @@
 """
-unilog: Unified logging and alerting for Slack/Lark (Python)
+commonlog: Unified logging and alerting for Slack/Lark (Python)
 """
 
-from .unilog_types import SendMethod, AlertLevel, Attachment, Config, Provider, ChannelResolver, DefaultChannelResolver
+from .commonlog_types import SendMethod, AlertLevel, Attachment, Config, Provider, ChannelResolver, DefaultChannelResolver
 from .providers import SlackProvider, LarkProvider
-from .logger import Unilog
+from .logger import commonlog
 
 __all__ = [
     "SendMethod",
@@ -16,5 +16,5 @@ __all__ = [
     "DefaultChannelResolver",
     "SlackProvider",
     "LarkProvider",
-    "Unilog"
+    "commonlog"
 ]

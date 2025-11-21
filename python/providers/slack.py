@@ -1,8 +1,8 @@
 """
-Slack Provider for unilog
+Slack Provider for commonlog
 """
 import requests
-from ..unilog_types import SendMethod, Provider
+from ..commonlog_types import SendMethod, Provider
 
 class SlackProvider(Provider):
     def send_to_channel(self, level, message, attachment, config, channel):

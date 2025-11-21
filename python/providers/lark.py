@@ -1,9 +1,9 @@
 """
-Lark Provider for unilog
+Lark Provider for commonlog
 """
 import requests
 import json
-from ..unilog_types import SendMethod, Provider
+from ..commonlog_types import SendMethod, Provider
 from .redis_client import get_redis_client, RedisConfigError
 
 class LarkProvider(Provider):
@@ -14,7 +14,7 @@ class LarkProvider(Provider):
         config.channel = original_channel
 
     def cache_lark_token(self, config, app_id, app_secret, token, expire):
-        key = f"unilog_lark_token:{app_id}:{app_secret}"
+        key = f"commonlog_lark_token:{app_id}:{app_secret}"
         try:
             client = get_redis_client(config)
         except RedisConfigError as e:
@@ -25,7 +25,7 @@ class LarkProvider(Provider):
         client.setex(key, expire_seconds, token)
 
     def get_cached_lark_token(self, config, app_id, app_secret):
-        key = f"unilog_lark_token:{app_id}:{app_secret}"
+        key = f"commonlog_lark_token:{app_id}:{app_secret}"
         try:
             client = get_redis_client(config)
         except RedisConfigError as e:

@@ -1,9 +1,9 @@
-package unilog
+package commonlog
 
 import (
 	"testing"
 
-	"gitlab.com/pasarpolis/unilog/go/types"
+	"gitlab.com/pasarpolis/commonlog/go/types"
 )
 
 func TestNewLogger(t *testing.T) {

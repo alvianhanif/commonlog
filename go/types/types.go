@@ -1,4 +1,4 @@
-// Package unilog provides a unified logging and alerting library
+// Package commonlog provides a unified logging and alerting library
 // supporting multiple providers like Slack and Lark with various send methods.
 package types
 

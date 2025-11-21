@@ -1,4 +1,4 @@
-# unilog (Go)
+# commonlog (Go)
 
 A unified logging and alerting library for Go, supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
 
@@ -7,7 +7,7 @@ A unified logging and alerting library for Go, supporting Slack and Lark integra
 Add to your `go.mod`:
 
 ```bash
-go get gitlab.com/pasarpolis/unilog/go
+go get gitlab.com/pasarpolis/commonlog/go
 ```
 
 
@@ -17,28 +17,28 @@ go get gitlab.com/pasarpolis/unilog/go
 package main
 
 import (
-    "gitlab.com/pasarpolis/unilog/go"
+    "gitlab.com/pasarpolis/commonlog/go"
 )
 
 func main() {
-    cfg := unilog.Config{
+    cfg := commonlog.Config{
         Provider:   "lark", // or "slack"
-        SendMethod: unilog.MethodWebClient,
+        SendMethod: commonlog.MethodWebClient,
         Token:      "app_id++app_secret", // for Lark, use "app_id++app_secret" format
         Channel:    "your_lark_channel_id",
         RedisHost:  "localhost", // required for Lark
         RedisPort:  "6379",      // required for Lark
     }
-    logger := unilog.NewLogger(cfg)
+    logger := commonlog.NewLogger(cfg)
 
     // Send error with attachment
-    logger.Send(unilog.ERROR, "System error occurred", &unilog.Attachment{URL: "https://example.com/log.txt"})
+    logger.Send(commonlog.ERROR, "System error occurred", &commonlog.Attachment{URL: "https://example.com/log.txt"})
 
     // Send info (logs only)
-    logger.Send(unilog.INFO, "Info message")
+    logger.Send(commonlog.INFO, "Info message")
 
     // Send to a specific channel
-    logger.SendToChannel(unilog.ERROR, "Send to another channel", nil, "", "another-channel-id")
+    logger.SendToChannel(commonlog.ERROR, "Send to another channel", nil, "", "another-channel-id")
 }
 ```
 
@@ -54,8 +54,8 @@ You can configure different channels for different alert levels using a channel 
 package main
 
 import (
-    "gitlab.com/pasarpolis/unilog/go"
-    "gitlab.com/pasarpolis/unilog/go/types"
+    "gitlab.com/pasarpolis/commonlog/go"
+    "gitlab.com/pasarpolis/commonlog/go/types"
 )
 
 func main() {
@@ -79,7 +79,7 @@ func main() {
         Environment:     "production",
     }
 
-    logger := unilog.NewLogger(config)
+    logger := commonlog.NewLogger(config)
 
     // These will go to different channels based on level
     logger.Send(types.INFO, "Info message")    // goes to #general
@@ -133,8 +133,8 @@ func (r *CustomResolver) ResolveChannel(level int) string {
 Provide a public URL. The library appends it to the message for simplicity.
 
 ```go
-attachment := &unilog.Attachment{URL: "https://example.com/log.txt"}
-logger.Send(unilog.ERROR, "Error with log", attachment, "")
+attachment := &commonlog.Attachment{URL: "https://example.com/log.txt"}
+logger.Send(commonlog.ERROR, "Error with log", attachment, "")
 ```
 
 ## Trace Log Section
@@ -143,7 +143,7 @@ When `IncludeTrace` is set to `true`, you can pass trace information as the four
 
 ```go
 trace := "goroutine 1 [running]:\nmain.main()\n    /app/main.go:15 +0x2f"
-logger.Send(unilog.ERROR, "System error occurred", nil, trace)
+logger.Send(commonlog.ERROR, "System error occurred", nil, trace)
 ```
 
 This will format the trace as a code block in the alert message.

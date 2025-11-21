@@ -1,4 +1,4 @@
-# unilog (Python)
+# commonlog (Python)
 
 A unified logging and alerting library for Python, supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
 
@@ -7,7 +7,7 @@ A unified logging and alerting library for Python, supporting Slack and Lark int
 Install via pip:
 
 ```bash
-pip install unilog
+pip install commonlog
 ```
 
 Or copy the `python/` directory to your project.
@@ -16,7 +16,7 @@ Or copy the `python/` directory to your project.
 ## Usage
 
 ```python
-from python import Unilog, Config, SendMethod, AlertLevel, Attachment
+from python import commonlog, Config, SendMethod, AlertLevel, Attachment
 
 # Configure logger
 config = Config(
@@ -27,7 +27,7 @@ config = Config(
     redis_host="localhost", # required for Lark
     redis_port="6379",      # required for Lark
 )
-logger = Unilog(config)
+logger = commonlog(config)
 
 # Send error with attachment
 logger.send(AlertLevel.ERROR, "System error occurred", Attachment(url="https://example.com/log.txt"))
@@ -48,7 +48,7 @@ When using Lark, the tenant_access_token is cached in Redis. The expiry is set d
 You can configure different channels for different alert levels using a channel resolver:
 
 ```python
-from unilog import Unilog, Config, SendMethod, AlertLevel, DefaultChannelResolver
+from commonlog import commonlog, Config, SendMethod, AlertLevel, DefaultChannelResolver
 
 # Create a channel resolver
 resolver = DefaultChannelResolver(
@@ -70,7 +70,7 @@ config = Config(
     environment="production"
 )
 
-logger = Unilog(config)
+logger = commonlog(config)
 
 # These will go to different channels based on level
 logger.send(AlertLevel.INFO, "Info message")    # goes to #general
@@ -142,7 +142,7 @@ This will format the trace as a code block in the alert message.
 
 ```bash
 cd python
-PYTHONPATH=.. python -m unittest test_unilog.py
+PYTHONPATH=.. python -m unittest test_commonlog.py
 ```
 
 ## API Reference
@@ -152,7 +152,7 @@ PYTHONPATH=.. python -m unittest test_unilog.py
 - `Config`: Configuration class
 - `Attachment`: File attachment class
 - `Provider`: Abstract base class for alert providers
-- `Unilog`: Main logger class
+- `commonlog`: Main logger class
 
 ### Constants
 
@@ -161,5 +161,5 @@ PYTHONPATH=.. python -m unittest test_unilog.py
 
 ### Methods
 
-- `Unilog(config)`: Create a new logger
-- `Unilog.send(level, message, attachment=None, trace="")`: Send alert with optional trace
+- `commonlog(config)`: Create a new logger
+- `commonlog.send(level, message, attachment=None, trace="")`: Send alert with optional trace

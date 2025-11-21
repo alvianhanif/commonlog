@@ -1,5 +1,5 @@
 """
-Redis client for unilog (Python)
+Redis client for commonlog (Python)
 """
 import redis
 

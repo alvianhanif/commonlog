@@ -1,5 +1,5 @@
 """
-unilog: Unified logging and alerting for Slack/Lark (Python)
+commonlog: Unified logging and alerting for Slack/Lark (Python)
 """
 from abc import ABC, abstractmethod
 
