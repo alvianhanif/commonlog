@@ -3,8 +3,8 @@ package commonlog
 import (
 	"log"
 
-	"gitlab.com/pasarpolis/commonlog/go/providers"
-	"gitlab.com/pasarpolis/commonlog/go/types"
+	"github.com/alvianhanif/commonlog/go/providers"
+	"github.com/alvianhanif/commonlog/go/types"
 )
 
 // ====================

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.com/pasarpolis/commonlog/go/types"
+	"github.com/alvianhanif/commonlog/go/types"
 
 	redis "github.com/go-redis/redis"
 )

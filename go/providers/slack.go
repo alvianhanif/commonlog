@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"gitlab.com/pasarpolis/commonlog/go/types"
+	"github.com/alvianhanif/commonlog/go/types"
 )
 
 // SlackProvider implements Provider for Slack

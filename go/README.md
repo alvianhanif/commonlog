@@ -7,7 +7,7 @@ A unified logging and alerting library for Go, supporting Slack and Lark integra
 Add to your `go.mod`:
 
 ```bash
-go get gitlab.com/pasarpolis/commonlog/go
+go get github.com/alvianhanif/commonlog/go
 ```
 
 
@@ -17,7 +17,7 @@ go get gitlab.com/pasarpolis/commonlog/go
 package main
 
 import (
-    "gitlab.com/pasarpolis/commonlog/go"
+    "github.com/alvianhanif/commonlog/go"
 )
 
 func main() {
@@ -54,8 +54,8 @@ You can configure different channels for different alert levels using a channel 
 package main
 
 import (
-    "gitlab.com/pasarpolis/commonlog/go"
-    "gitlab.com/pasarpolis/commonlog/go/types"
+    "github.com/alvianhanif/commonlog/go"
+    "github.com/alvianhanif/commonlog/go/types"
 )
 
 func main() {

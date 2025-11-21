@@ -3,7 +3,7 @@ package commonlog
 import (
 	"testing"
 
-	"gitlab.com/pasarpolis/commonlog/go/types"
+	"github.com/alvianhanif/commonlog/go/types"
 )
 
 func TestNewLogger(t *testing.T) {
