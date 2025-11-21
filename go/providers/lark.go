@@ -43,6 +43,50 @@ func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, erro
 	return client.Get(key).Result()
 }
 
+// getChatIDFromChannelName fetches the chat_id for a given channel name
+func getChatIDFromChannelName(cfg types.Config, token, channelName string) (string, error) {
+	url := "https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=open_id"
+	headers := map[string]string{"Authorization": "Bearer " + token}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("lark chats API response: %d", resp.StatusCode)
+	}
+
+	var result struct {
+		Items []struct {
+			ChatID string `json:"chat_id"`
+			Name   string `json:"name"`
+		} `json:"items"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	// Find the chat with matching name
+	for _, item := range result.Items {
+		if item.Name == channelName {
+			return item.ChatID, nil
+		}
+	}
+
+	return "", fmt.Errorf("channel '%s' not found", channelName)
+}
+
 // LarkProvider implements Provider for Lark
 type LarkProvider struct{}
 
@@ -159,24 +203,19 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 			return err
 		}
 		token = fetched
-	} else {
-		// If token is in "app_id++app_secret" format, fetch the tenant_access_token
-		if len(token) > 0 && len(token) < 100 && bytes.Contains([]byte(token), []byte("++")) {
-			parts := bytes.Split([]byte(token), []byte("++"))
-			if len(parts) == 2 {
-				fetched, err := getTenantAccessToken(cfg, string(parts[0]), string(parts[1]))
-				if err != nil {
-					return err
-				}
-				token = fetched
-			}
-		}
 	}
+
+	// Get chat_id from channel name
+	chatID, err := getChatIDFromChannelName(cfg, token, cfg.Channel)
+	if err != nil {
+		return fmt.Errorf("failed to get chat_id for channel '%s': %v", cfg.Channel, err)
+	}
+
 	url := "https://open.larksuite.com/open-apis/im/v1/messages"
 	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
 	content := fmt.Sprintf(`{"text":"%s"}`, formattedMessage)
 	payload := map[string]interface{}{
-		"receive_id": cfg.Channel,
+		"receive_id": chatID,
 		"msg_type":   "text",
 		"content":    json.RawMessage(content),
 	}

@@ -47,6 +47,24 @@ class LarkProvider(Provider):
         self.cache_lark_token(config, app_id, app_secret, token, expire)
         return token
 
+    def get_chat_id_from_channel_name(self, config, token, channel_name):
+        """Get chat_id from channel name using Lark API"""
+        url = "https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=open_id"
+        headers = {"Authorization": f"Bearer {token}"}
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            raise Exception(f"Lark chats API response: {response.status_code}")
+        
+        result = response.json()
+        items = result.get("items", [])
+        
+        # Find the chat with matching name
+        for item in items:
+            if item.get("name") == channel_name:
+                return item.get("chat_id")
+        
+        raise Exception(f"Channel '{channel_name}' not found")
+
     def send(self, level, message, attachment, config):
         formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
@@ -77,11 +95,19 @@ class LarkProvider(Provider):
         # Use lark_token if available, otherwise fall back to token parsing
         if config.lark_token and config.lark_token.app_id and config.lark_token.app_secret:
             token = self.get_tenant_access_token(config, config.lark_token.app_id, config.lark_token.app_secret)
+        elif token and len(token) < 100 and "++" in token:
+            # If token is in "app_id++app_secret" format, fetch the tenant_access_token
+            parts = token.split("++")
+            if len(parts) == 2:
+                token = self.get_tenant_access_token(config, parts[0], parts[1])
+        
+        # Get chat_id from channel name
+        chat_id = self.get_chat_id_from_channel_name(config, token, config.channel)
         
         url = "https://open.larksuite.com/open-apis/im/v1/messages"
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         content = json.dumps({"text": formatted_message})
-        payload = {"receive_id": config.channel, "msg_type": "text", "content": content}
+        payload = {"receive_id": chat_id, "msg_type": "text", "content": content}
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code != 200:
             raise Exception(f"Lark WebClient response: {response.status_code}")
