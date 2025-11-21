@@ -1,0 +1,7 @@
+# Example configuration for unilog
+provider: slack # or lark
+send_method: webhook # or webclient, http
+token: ""
+webhook_url: "https://hooks.slack.com/services/..."
+http_url: ""
+channel: "#general"
