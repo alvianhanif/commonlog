@@ -16,13 +16,15 @@ Or copy the `python/` directory to your project.
 ## Usage
 
 ```python
-from python import commonlog, Config, SendMethod, AlertLevel, Attachment
+from python import commonlog, Config, SendMethod, AlertLevel, Attachment, LarkToken
 
 # Configure logger
 config = Config(
     provider="lark", # or "slack"
     send_method=SendMethod.WEBCLIENT,
     token="app_id++app_secret", # for Lark, use "app_id++app_secret" format
+    slack_token="xoxb-your-slack-token", # dedicated Slack token
+    lark_token=LarkToken(app_id="your-app-id", app_secret="your-app-secret"), # dedicated Lark token
     channel="your_lark_channel_id",
     redis_host="localhost", # required for Lark
     redis_port="6379",      # required for Lark
@@ -37,6 +39,9 @@ logger.send(AlertLevel.INFO, "Info message")
 
 # Send to a specific channel
 logger.send_to_channel(AlertLevel.ERROR, "Send to another channel", channel="another-channel-id")
+
+# Send to a different provider dynamically
+logger.custom_send("slack", AlertLevel.ERROR, "Message via Slack", channel="slack-channel")
 ```
 
 ### Lark Token Caching

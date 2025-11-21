@@ -25,6 +25,11 @@ func main() {
         Provider:   "lark", // or "slack"
         SendMethod: commonlog.MethodWebClient,
         Token:      "app_id++app_secret", // for Lark, use "app_id++app_secret" format
+        SlackToken: "xoxb-your-slack-token", // dedicated Slack token
+        LarkToken: commonlog.LarkTokenConfig{ // dedicated Lark token
+            AppID:     "your-app-id",
+            AppSecret: "your-app-secret",
+        },
         Channel:    "your_lark_channel_id",
         RedisHost:  "localhost", // required for Lark
         RedisPort:  "6379",      // required for Lark
@@ -39,6 +44,9 @@ func main() {
 
     // Send to a specific channel
     logger.SendToChannel(commonlog.ERROR, "Send to another channel", nil, "", "another-channel-id")
+
+    // Send to a different provider dynamically
+    logger.CustomSend("slack", commonlog.ERROR, "Message via Slack", nil, "", "slack-channel")
 }
 ```
 
