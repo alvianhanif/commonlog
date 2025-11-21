@@ -60,7 +60,7 @@ The client automatically maps alert levels to appropriate channels based on envi
 - WARN: `#pasarpolis-unittest-warnings`
 - ERROR: `#pasarpolis-unittest-alerts`
 
-**Note**: The unittest environment logs alerts locally instead of sending to external APIs, making it safe for testing without requiring webhook URLs.
+**Note**: The unittest environment logs alerts locally instead of sending to external APIs, making it safe for testing without requiring API tokens.
 
 ## Advanced Usage
 
@@ -84,8 +84,8 @@ func main() {
             },
             DefaultChannel: "#my-general",
         }
-        // Custom webhook URL
-        config.WebhookURL = "https://hooks.slack.com/services/..."
+        // Custom API token
+        config.Token = "xoxb-your-custom-slack-token"
     }
 
     client, err := pasarpolis.NewClientWithConfig(
