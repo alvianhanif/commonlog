@@ -37,8 +37,6 @@ type Config struct {
 	Provider        string          // "slack" or "lark"
 	SendMethod      string          // "webclient", "webhook", "http"
 	Token           string          // API token for SDK/webclient
-	WebhookURL      string          // Webhook URL for webhook method
-	HTTPURL         string          // HTTP endpoint for direct method
 	Channel         string          // Default channel or chat ID (used if no resolver)
 	ChannelResolver ChannelResolver // Optional resolver for dynamic channel mapping
 	ServiceName     string          // Name of the service sending alerts

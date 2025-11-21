@@ -31,12 +31,10 @@ class DefaultChannelResolver(ChannelResolver):
         return self.channel_map.get(level, self.default_channel)
 
 class Config:
-    def __init__(self, provider, send_method, token=None, webhook_url=None, http_url=None, channel=None, channel_resolver=None, service_name=None, environment=None, redis_host=None, redis_port=None):
+    def __init__(self, provider, send_method, token=None, channel=None, channel_resolver=None, service_name=None, environment=None, redis_host=None, redis_port=None):
         self.provider = provider
         self.send_method = send_method
         self.token = token
-        self.webhook_url = webhook_url
-        self.http_url = http_url
         self.channel = channel
         self.channel_resolver = channel_resolver
         self.service_name = service_name
