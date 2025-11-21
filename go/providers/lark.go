@@ -10,7 +10,7 @@ import (
 
 	"github.com/alvianhanif/commonlog/go/types"
 
-	redis "github.com/redis/go-redis/v9"
+	redis "github.com/go-redis/redis/v8"
 )
 
 // getRedisClient returns a Redis client using host/port from cfg, env, or default
