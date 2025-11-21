@@ -1,6 +1,6 @@
 # unilog (Go)
 
-A unified logging and alerting library for Go, supporting Slack and Lark integrations via WebClient, webhook, or direct HTTP. Features configurable providers, alert levels, and file attachment support.
+A unified logging and alerting library for Go, supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
 
 ## Installation
 
@@ -22,8 +22,8 @@ import (
 func main() {
     cfg := unilog.Config{
         Provider:   "slack",
-        SendMethod: unilog.MethodWebhook,
-        WebhookURL: "https://hooks.slack.com/services/YOUR/HOOK",
+        SendMethod: unilog.MethodWebClient,
+        Token:      "xoxb-your-slack-bot-token",
         Channel:    "#alerts",
     }
     logger := unilog.NewLogger(cfg)
@@ -62,8 +62,8 @@ func main() {
     // Create config with channel resolver
     config := types.Config{
         Provider:        "slack",
-        SendMethod:      types.MethodWebhook,
-        WebhookURL:      "https://hooks.slack.com/...",
+        SendMethod:      types.MethodWebClient,
+        Token:           "xoxb-your-slack-bot-token",
         ChannelResolver: resolver,
         ServiceName:     "user-service",
         Environment:     "production",
@@ -102,7 +102,7 @@ func (r *CustomResolver) ResolveChannel(level int) string {
 ### Common Settings
 
 - **Provider**: `"slack"` or `"lark"`
-- **SendMethod**: `MethodWebClient`, `MethodWebhook`, or `MethodHTTP`
+- **SendMethod**: `MethodWebClient` (token-based authentication)
 - **Channel**: Target channel or chat ID (used if no resolver)
 - **ChannelResolver**: Optional resolver for dynamic channel mapping
 - **ServiceName**: Name of the service sending alerts
@@ -110,9 +110,7 @@ func (r *CustomResolver) ResolveChannel(level int) string {
 
 ### Provider-Specific
 
-- **Token**: API token (for `MethodWebClient`)
-- **WebhookURL**: Webhook URL (for `MethodWebhook`)
-- **HTTPURL**: Custom HTTP endpoint (for `MethodHTTP`)
+- **Token**: API token for WebClient authentication (required)
 
 ## Alert Levels
 
@@ -157,7 +155,7 @@ go test
 
 ### Constants
 
-- `MethodWebClient`, `MethodWebhook`, `MethodHTTP`: Send methods
+- `MethodWebClient`: Send method (token-based authentication)
 - `INFO`, `WARN`, `ERROR`: Alert levels
 
 ### Functions

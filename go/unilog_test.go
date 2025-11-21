@@ -9,8 +9,8 @@ import (
 func TestNewLogger(t *testing.T) {
 	cfg := types.Config{
 		Provider:   "slack",
-		SendMethod: types.MethodWebhook,
-		WebhookURL: "https://example.com",
+		SendMethod: types.MethodWebClient,
+		Token:      "dummy-token",
 		Channel:    "#test",
 	}
 	logger := NewLogger(cfg)

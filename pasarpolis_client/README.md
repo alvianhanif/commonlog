@@ -7,7 +7,7 @@ Simplified client libraries for pasarpolis services to easily integrate alerting
 These clients provide a simplified interface over the full unilog library, making it easy for pasarpolis services to add alerting with minimal configuration. They include:
 
 - **Sensible defaults** for channel mappings based on environment
-- **Environment variable configuration** for webhook URLs
+- **Environment variable configuration** for API tokens
 - **Full customization options** when needed
 - **Support for both Lark and Slack**
 
@@ -34,11 +34,11 @@ client = Client.create("my-service", Environment.PRODUCTION, Provider.SLACK)
 
 ## Environment Variables
 
-Both clients require webhook URLs to be set via environment variables:
+Both clients require API tokens to be set via environment variables:
 
 ```bash
-export PASARPOLIS_SLACK_WEBHOOK_URL="https://hooks.slack.com/services/..."
-export PASARPOLIS_LARK_WEBHOOK_URL="https://open.larksuite.com/open-apis/bot/v2/hook/..."
+export PASARPOLIS_SLACK_TOKEN="xoxb-your-slack-bot-token"
+export PASARPOLIS_LARK_TOKEN="your-lark-app-token"
 ```
 
 ## Default Behavior

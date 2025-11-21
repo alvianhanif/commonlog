@@ -25,10 +25,10 @@ client.send_warn("This is a warning")
 
 ## Environment Variables
 
-Set the following environment variables for webhook URLs:
+Set the following environment variables for API tokens:
 
-- `PASARPOLIS_SLACK_WEBHOOK_URL`: Slack webhook URL
-- `PASARPOLIS_LARK_WEBHOOK_URL`: Lark webhook URL
+- `PASARPOLIS_SLACK_TOKEN`: Slack bot token (starts with `xoxb-`)
+- `PASARPOLIS_LARK_TOKEN`: Lark app token
 
 ## Default Channel Mappings
 
@@ -54,7 +54,7 @@ The client automatically maps alert levels to appropriate channels based on envi
 - WARN: `#pasarpolis-unittest-warnings`
 - ERROR: `#pasarpolis-unittest-alerts`
 
-**Note**: The unittest environment logs alerts locally instead of sending to external APIs, making it safe for testing without requiring webhook URLs.
+**Note**: The unittest environment logs alerts locally instead of sending to external APIs, making it safe for testing without requiring API tokens.
 
 ## Advanced Usage
 
@@ -72,8 +72,8 @@ def customize_config(config):
         },
         default_channel="#my-general"
     )
-    # Custom webhook URL
-    config.webhook_url = "https://hooks.slack.com/services/..."
+    # Custom API token
+    config.token = "xoxb-your-custom-slack-token"
 
 client = Client.create_with_config(
     service_name="my-service",

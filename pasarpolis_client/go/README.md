@@ -31,10 +31,10 @@ func main() {
 
 ## Environment Variables
 
-Set the following environment variables for webhook URLs:
+Set the following environment variables for API tokens:
 
-- `PASARPOLIS_SLACK_WEBHOOK_URL`: Slack webhook URL
-- `PASARPOLIS_LARK_WEBHOOK_URL`: Lark webhook URL
+- `PASARPOLIS_SLACK_TOKEN`: Slack bot token (starts with `xoxb-`)
+- `PASARPOLIS_LARK_TOKEN`: Lark app token
 
 ## Default Channel Mappings
 
@@ -60,7 +60,7 @@ The client automatically maps alert levels to appropriate channels based on envi
 - WARN: `#pasarpolis-unittest-warnings`
 - ERROR: `#pasarpolis-unittest-alerts`
 
-**Note**: The unittest environment logs alerts locally instead of sending to external APIs, making it safe for testing without requiring webhook URLs.
+**Note**: The unittest environment logs alerts locally instead of sending to external APIs, making it safe for testing without requiring API tokens.
 
 ## Advanced Usage
 
@@ -84,8 +84,8 @@ func main() {
             },
             DefaultChannel: "#my-general",
         }
-        // Custom webhook URL
-        config.WebhookURL = "https://hooks.slack.com/services/..."
+        // Custom API token
+        config.Token = "xoxb-your-custom-slack-token"
     }
 
     client, err := pasarpolis.NewClientWithConfig(

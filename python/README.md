@@ -1,6 +1,6 @@
 # unilog (Python)
 
-A unified logging and alerting library for Python, supporting Slack and Lark integrations via WebClient, webhook, or direct HTTP. Features configurable providers, alert levels, and file attachment support.
+A unified logging and alerting library for Python, supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
 
 ## Installation
 
@@ -20,8 +20,8 @@ from python import Unilog, Config, SendMethod, AlertLevel, Attachment
 # Configure logger
 config = Config(
     provider="slack",
-    send_method=SendMethod.WEBHOOK,
-    webhook_url="https://hooks.slack.com/services/YOUR/HOOK",
+    send_method=SendMethod.WEBCLIENT,
+    token="xoxb-your-slack-bot-token",
     channel="#alerts"
 )
 logger = Unilog(config)
@@ -53,8 +53,8 @@ resolver = DefaultChannelResolver(
 # Create config with channel resolver
 config = Config(
     provider="slack",
-    send_method=SendMethod.WEBHOOK,
-    webhook_url="https://hooks.slack.com/...",
+    send_method=SendMethod.WEBCLIENT,
+    token="xoxb-your-slack-bot-token",
     channel_resolver=resolver,
     service_name="user-service",
     environment="production"
@@ -88,7 +88,7 @@ class CustomResolver(ChannelResolver):
 ### Common Settings
 
 - **provider**: `"slack"` or `"lark"`
-- **send_method**: `"webclient"`, `"webhook"`, or `"http"`
+- **send_method**: `"webclient"` (token-based authentication)
 - **channel**: Target channel or chat ID (used if no resolver)
 - **channel_resolver**: Optional resolver for dynamic channel mapping
 - **service_name**: Name of the service sending alerts
@@ -96,9 +96,7 @@ class CustomResolver(ChannelResolver):
 
 ### Provider-Specific
 
-- **token**: API token (for `webclient` method)
-- **webhook_url**: Webhook URL (for `webhook` method)
-- **http_url**: Custom HTTP endpoint (for `http` method)
+- **token**: API token for WebClient authentication (required)
 
 ## Alert Levels
 
@@ -148,7 +146,7 @@ PYTHONPATH=.. python -m unittest test_unilog.py
 
 ### Constants
 
-- `SendMethod.WEBCLIENT`, `SendMethod.WEBHOOK`, `SendMethod.HTTP`: Send methods
+- `SendMethod.WEBCLIENT`: Send method (token-based authentication)
 - `AlertLevel.INFO`, `AlertLevel.WARN`, `AlertLevel.ERROR`: Alert levels
 
 ### Methods
