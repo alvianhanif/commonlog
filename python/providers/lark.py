@@ -77,11 +77,6 @@ class LarkProvider(Provider):
         # Use lark_token if available, otherwise fall back to token parsing
         if config.lark_token and config.lark_token.app_id and config.lark_token.app_secret:
             token = self.get_tenant_access_token(config, config.lark_token.app_id, config.lark_token.app_secret)
-        elif token and len(token) < 100 and "++" in token:
-            # If token is in "app_id++app_secret" format, fetch the tenant_access_token
-            parts = token.split("++")
-            if len(parts) == 2:
-                token = self.get_tenant_access_token(config, parts[0], parts[1])
         
         url = "https://open.larksuite.com/open-apis/im/v1/messages"
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
