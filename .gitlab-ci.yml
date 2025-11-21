@@ -1,3 +1,6 @@
+variables:
+    REPO: gitlab.com/pasarpolis/unilog
+
 stages:
   - test
 
