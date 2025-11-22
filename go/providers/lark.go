@@ -46,6 +46,15 @@ func cacheLarkToken(cfg types.Config, appID, appSecret, token string) error {
 	return client.Set(context.Background(), key, token, 90*time.Minute).Err()
 }
 
+func cacheChatID(cfg types.Config, channelName, chatID string) error {
+	key := "commonlog_lark_chat_id:" + cfg.Environment + ":" + channelName
+	client, err := getRedisClient(cfg)
+	if err != nil {
+		return err
+	}
+	return client.Set(context.Background(), key, chatID, 0).Err() // No expiry
+}
+
 func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, error) {
 	key := "commonlog_lark_token:" + appID + ":" + appSecret
 	client, err := getRedisClient(cfg)
@@ -64,53 +73,100 @@ func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, erro
 	return result, nil
 }
 
-// getChatIDFromChannelName fetches the chat_id for a given channel name
+func getCachedChatID(cfg types.Config, channelName string) (string, error) {
+	key := "commonlog_lark_chat_id:" + cfg.Environment + ":" + channelName
+	client, err := getRedisClient(cfg)
+	if err != nil {
+		return "", err
+	}
+	result, err := client.Get(context.Background(), key).Result()
+	if err == redis.Nil {
+		fmt.Printf("[Lark] No cached chat_id found for channel: %s in environment: %s\n", channelName, cfg.Environment)
+		return "", nil // No cached chat_id
+	} else if err != nil {
+		fmt.Printf("[Lark] Error retrieving cached chat_id for channel %s in environment %s: %v\n", channelName, cfg.Environment, err)
+		return "", err
+	}
+	fmt.Printf("[Lark] Retrieved cached chat_id for channel: %s in environment: %s\n", channelName, cfg.Environment)
+	return result, nil
+}
+
+// getChatIDFromChannelName fetches the chat_id for a given channel name using pagination
 func getChatIDFromChannelName(cfg types.Config, token, channelName string) (string, error) {
-	url := "https://open.larksuite.com/open-apis/im/v1/chats?page_size=1"
+	// Try Redis cache first
+	cached, err := getCachedChatID(cfg, channelName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get Redis client: %w", err)
+	}
+	if cached != "" {
+		return cached, nil
+	}
+
+	baseURL := "https://open.larksuite.com/open-apis/im/v1/chats"
 	headers := map[string]string{"Authorization": "Bearer " + token}
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return "", err
-	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
+	pageToken := ""
+	hasMore := true
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	respBody := new(bytes.Buffer)
-	_, copyErr := respBody.ReadFrom(resp.Body)
-	if copyErr != nil {
-		fmt.Printf("[Lark] Error reading response body: %v\n", copyErr)
-	} else {
-		fmt.Printf("[Lark] getChatIDFromChannelName response data: %s\n", respBody.String())
-	}
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("lark chats API response: %d", resp.StatusCode)
-	}
-
-	var result struct {
-		Items []struct {
-			ChatID string `json:"chat_id"`
-			Name   string `json:"name"`
-		} `json:"items"`
-	}
-
-	if err := json.Unmarshal(respBody.Bytes(), &result); err != nil {
-		return "", err
-	}
-
-	// Find the chat with matching name
-	for _, item := range result.Items {
-		if item.Name == channelName {
-			return item.ChatID, nil
+	for hasMore {
+		url := baseURL + "?page_size=10"
+		if pageToken != "" {
+			url += "&page_token=" + pageToken
 		}
+
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return "", err
+		}
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			return "", fmt.Errorf("lark chats API response: %d", resp.StatusCode)
+		}
+
+		var result struct {
+			Code int    `json:"code"`
+			Msg  string `json:"msg"`
+			Data struct {
+				Items []struct {
+					ChatID string `json:"chat_id"`
+					Name   string `json:"name"`
+				} `json:"items"`
+				PageToken string `json:"page_token"`
+				HasMore   bool   `json:"has_more"`
+			} `json:"data"`
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			return "", err
+		}
+
+		if result.Code != 0 {
+			return "", fmt.Errorf("lark API error: %s", result.Msg)
+		}
+
+		// Search for the channel name in the current page
+		for _, item := range result.Data.Items {
+			if item.Name == channelName {
+				// Cache the chat_id without expiry
+				if err := cacheChatID(cfg, channelName, item.ChatID); err != nil {
+					fmt.Printf("[Lark] Warning: failed to cache chat_id for channel %s: %v\n", channelName, err)
+				}
+				return item.ChatID, nil
+			}
+		}
+
+		// Update pagination info
+		pageToken = result.Data.PageToken
+		hasMore = result.Data.HasMore
 	}
 
 	return "", fmt.Errorf("channel '%s' not found", channelName)

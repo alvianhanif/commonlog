@@ -32,6 +32,22 @@ class LarkProvider(Provider):
             raise Exception(f"Redis config error: {e}")
         return client.get(key)
 
+    def cache_chat_id(self, config, channel_name, chat_id):
+        key = f"commonlog_lark_chat_id:{config.environment}:{channel_name}"
+        try:
+            client = get_redis_client(config)
+        except RedisConfigError as e:
+            raise Exception(f"Redis config error: {e}")
+        client.set(key, chat_id)  # No expiry
+
+    def get_cached_chat_id(self, config, channel_name):
+        key = f"commonlog_lark_chat_id:{config.environment}:{channel_name}"
+        try:
+            client = get_redis_client(config)
+        except RedisConfigError as e:
+            raise Exception(f"Redis config error: {e}")
+        return client.get(key)
+
     def get_tenant_access_token(self, config, app_id, app_secret):
         cached = self.get_cached_lark_token(config, app_id, app_secret)
         if cached:
@@ -48,20 +64,51 @@ class LarkProvider(Provider):
         return token
 
     def get_chat_id_from_channel_name(self, config, token, channel_name):
-        """Get chat_id from channel name using Lark API"""
-        url = "https://open.larksuite.com/open-apis/im/v1/chats?page_size=1"
-        headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            raise Exception(f"Lark chats API response: {response.status_code}")
+        """Get chat_id from channel name using Lark API with pagination"""
+        # Try Redis cache first
+        cached = self.get_cached_chat_id(config, channel_name)
+        if cached:
+            return cached
         
-        result = response.json()
-        items = result.get("items", [])
+        base_url = "https://open.larksuite.com/open-apis/im/v1/chats"
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        all_chats = []
+        page_token = ""
+        has_more = True
+        
+        while has_more:
+            url = f"{base_url}?page_size=10"
+            if page_token:
+                url += f"&page_token={page_token}"
+            
+            response = requests.get(url, headers=headers)
+            if response.status_code != 200:
+                raise Exception(f"Lark chats API response: {response.status_code}")
+            
+            result = response.json()
+            
+            # Check for API error
+            if result.get("code", 1) != 0:
+                raise Exception(f"Lark API error: {result.get('msg', 'Unknown error')}")
+            
+            data = result.get("data", {})
+            items = data.get("items", [])
+            
+            # Add current page items to all chats
+            all_chats.extend(items)
+            
+            # Update pagination info
+            page_token = data.get("page_token", "")
+            has_more = data.get("has_more", False)
         
         # Find the chat with matching name
-        for item in items:
+        for item in all_chats:
             if item.get("name") == channel_name:
-                return item.get("chat_id")
+                chat_id = item.get("chat_id")
+                # Cache the chat_id without expiry
+                self.cache_chat_id(config, channel_name, chat_id)
+                return chat_id
         
         raise Exception(f"Channel '{channel_name}' not found")
 
