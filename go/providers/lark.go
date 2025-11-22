@@ -304,11 +304,13 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 
 	url := "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
 	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
-	content := fmt.Sprintf(`{"text":"%s"}`, formattedMessage)
+	contentStruct := map[string]string{
+		"text": formattedMessage,
+	}
 	payload := map[string]interface{}{
 		"receive_id": chatID,
 		"msg_type":   "text",
-		"content":    json.RawMessage(content),
+		"content":    contentStruct,
 	}
 	data, _ := json.Marshal(payload)
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
