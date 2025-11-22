@@ -52,7 +52,16 @@ func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	return client.Get(context.Background(), key).Result()
+	result, err := client.Get(context.Background(), key).Result()
+	if err == redis.Nil {
+		fmt.Printf("[Lark] No cached token found for key: %s\n", key)
+		return "", nil // No cached token
+	} else if err != nil {
+		fmt.Printf("[Lark] Error retrieving cached token for key %s: %v\n", key, err)
+		return "", err
+	}
+	fmt.Printf("[Lark] Retrieved cached token for key: %s\n", key)
+	return result, nil
 }
 
 // getChatIDFromChannelName fetches the chat_id for a given channel name
