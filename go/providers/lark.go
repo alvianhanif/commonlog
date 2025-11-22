@@ -315,7 +315,7 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	fmt.Printf("[Lark] Sending POST request to %s\n", url)
+	fmt.Printf("[Lark] Sending POST request to %s, Payload: %s\n", url, string(data))
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		fmt.Printf("[Lark] Error sending POST request: %v\n", err)
