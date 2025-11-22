@@ -49,7 +49,7 @@ class LarkProvider(Provider):
 
     def get_chat_id_from_channel_name(self, config, token, channel_name):
         """Get chat_id from channel name using Lark API"""
-        url = "https://open.larksuite.com/open-apis/im/v1/chat/list"
+        url = "https://open.larksuite.com/open-apis/im/v1/chats?page_size=1"
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(url, headers=headers)
         if response.status_code != 200:
