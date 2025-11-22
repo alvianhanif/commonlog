@@ -151,7 +151,7 @@ class LarkProvider(Provider):
         # Get chat_id from channel name
         chat_id = self.get_chat_id_from_channel_name(config, token, config.channel)
         
-        url = "https://open.larksuite.com/open-apis/im/v1/messages"
+        url = "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         content = json.dumps({"text": formatted_message})
         payload = {"receive_id": chat_id, "msg_type": "text", "content": content}

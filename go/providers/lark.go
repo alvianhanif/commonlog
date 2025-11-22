@@ -302,7 +302,7 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		return fmt.Errorf("failed to get chat_id for channel '%s': %v", cfg.Channel, err)
 	}
 
-	url := "https://open.larksuite.com/open-apis/im/v1/messages"
+	url := "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
 	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
 	content := fmt.Sprintf(`{"text":"%s"}`, formattedMessage)
 	payload := map[string]interface{}{
