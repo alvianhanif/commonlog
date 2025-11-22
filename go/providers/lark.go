@@ -83,6 +83,14 @@ func getChatIDFromChannelName(cfg types.Config, token, channelName string) (stri
 	}
 	defer resp.Body.Close()
 
+	respBody := new(bytes.Buffer)
+	_, copyErr := respBody.ReadFrom(resp.Body)
+	if copyErr != nil {
+		fmt.Printf("[Lark] Error reading response body: %v\n", copyErr)
+	} else {
+		fmt.Printf("[Lark] getChatIDFromChannelName response data: %s\n", respBody.String())
+	}
+
 	if resp.StatusCode != 200 {
 		return "", fmt.Errorf("lark chats API response: %d", resp.StatusCode)
 	}
@@ -94,7 +102,7 @@ func getChatIDFromChannelName(cfg types.Config, token, channelName string) (stri
 		} `json:"items"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(respBody.Bytes(), &result); err != nil {
 		return "", err
 	}
 
@@ -270,8 +278,9 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 
 	if resp.StatusCode != 200 {
 		fmt.Printf("[Lark] WebClient response status: %d\n", resp.StatusCode)
+		fmt.Printf("[Lark] Response data: %s\n", respBody.String())
 		return fmt.Errorf("lark WebClient response: %d", resp.StatusCode)
 	}
-	fmt.Printf("[Lark] Message sent successfully to channel '%s'\n", cfg.Channel)
+	fmt.Printf("[Lark] Message sent successfully to channel '%s'. Response: %s\n", cfg.Channel, respBody.String())
 	return nil
 }
