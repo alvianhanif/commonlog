@@ -295,7 +295,7 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	}
 
 	// Get chat_id from channel name
-	fmt.Printf("[Lark] Resolving chat_id for channel '%s'\n", cfg.Channel)
+	fmt.Printf("[Lark] Resolving chat_id for channel '%s'\nToken: %s\n", cfg.Channel, token)
 	chatID, err := getChatIDFromChannelName(cfg, token, cfg.Channel)
 	if err != nil {
 		fmt.Printf("[Lark] Failed to get chat_id for channel '%s': %v\n", cfg.Channel, err)
