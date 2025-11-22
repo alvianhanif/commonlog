@@ -66,7 +66,7 @@ func getCachedLarkToken(cfg types.Config, appID, appSecret string) (string, erro
 
 // getChatIDFromChannelName fetches the chat_id for a given channel name
 func getChatIDFromChannelName(cfg types.Config, token, channelName string) (string, error) {
-	url := "https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=open_id"
+	url := "https://open.larksuite.com/open-apis/im/v1/chat/list"
 	headers := map[string]string{"Authorization": "Bearer " + token}
 
 	req, err := http.NewRequest("GET", url, nil)
