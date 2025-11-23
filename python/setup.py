@@ -19,6 +19,7 @@ setup(
     url="https://github.com/alvianhanif/commonlog",
     packages=find_packages(),
     install_requires=[],
+    license="MIT",
     python_requires=">=3.6",
     classifiers=[
         "Programming Language :: Python :: 3",
