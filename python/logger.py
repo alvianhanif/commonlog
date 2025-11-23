@@ -32,6 +32,7 @@ class commonlog:
             self.config.channel = original_channel
         except Exception as e:
             logging.error(f"Failed to send alert: {e}")
+            raise
 
     def custom_send(self, provider, level, message, attachment=None, trace="", channel=None):
         if provider == "slack":
@@ -63,6 +64,7 @@ class commonlog:
             self.config.channel = original_channel
         except Exception as e:
             logging.error(f"Failed to send alert: {e}")
+            raise
 
     def __init__(self, config):
         self.config = config
@@ -108,3 +110,4 @@ class commonlog:
             self.config.channel = original_channel
         except Exception as e:
             logging.error(f"Failed to send alert: {e}")
+            raise

@@ -11,6 +11,18 @@ import (
 // Main Logger
 // ====================
 
+// createProvider creates a provider instance by name
+func createProvider(providerName string) types.Provider {
+	switch providerName {
+	case "slack":
+		return &providers.SlackProvider{}
+	case "lark":
+		return &providers.LarkProvider{}
+	default:
+		return &providers.SlackProvider{}
+	}
+}
+
 // Logger is the main struct
 type Logger struct {
 	config   types.Config
@@ -19,16 +31,8 @@ type Logger struct {
 
 // NewLogger creates a new Logger with the appropriate provider
 func NewLogger(cfg types.Config) *Logger {
-	var provider types.Provider
-	switch cfg.Provider {
-	case "slack":
-		provider = &providers.SlackProvider{}
-	case "lark":
-		provider = &providers.LarkProvider{}
-	default:
-		provider = &providers.SlackProvider{}
-	}
-	return &Logger{config: cfg, provider: provider}
+	providerName := createProvider(cfg.Provider)
+	return &Logger{config: cfg, provider: providerName}
 }
 
 // resolveChannel resolves the channel for the given alert level
@@ -40,15 +44,15 @@ func (l *Logger) resolveChannel(level int) string {
 }
 
 // Send sends a message with alert level, optional attachment, and optional trace log
-func (l *Logger) Send(level int, message string, attachment *types.Attachment, trace string) {
-	l.SendToChannel(level, message, attachment, trace, "")
+func (l *Logger) Send(level int, message string, attachment *types.Attachment, trace string) error {
+	return l.SendToChannel(level, message, attachment, trace, "")
 }
 
 // SendToChannel sends a message to a specific channel, overriding the default/channel resolver
-func (l *Logger) SendToChannel(level int, message string, attachment *types.Attachment, trace string, channel string) {
+func (l *Logger) SendToChannel(level int, message string, attachment *types.Attachment, trace string, channel string) error {
 	if level == types.INFO {
 		log.Printf("[INFO] %s", message)
-		return
+		return nil
 	}
 
 	resolvedChannel := channel
@@ -76,27 +80,20 @@ func (l *Logger) SendToChannel(level int, message string, attachment *types.Atta
 		}
 	}
 
-	if err := l.provider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel); err != nil {
-		log.Printf("[ERROR] Failed to send alert: %v", err)
-	}
+	return l.provider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel)
 }
 
 // CustomSend sends a message with a custom provider, allowing override of the default provider
-func (l *Logger) CustomSend(provider string, level int, message string, attachment *types.Attachment, trace string, channel string) {
-	var customProvider types.Provider
-	switch provider {
-	case "slack":
-		customProvider = &providers.SlackProvider{}
-	case "lark":
-		customProvider = &providers.LarkProvider{}
-	default:
+func (l *Logger) CustomSend(provider string, level int, message string, attachment *types.Attachment, trace string, channel string) error {
+	customProvider := createProvider(provider)
+	if customProvider == nil {
 		log.Printf("[ERROR] Unknown provider: %s, defaulting to slack", provider)
-		customProvider = &providers.SlackProvider{}
+		customProvider = createProvider("slack")
 	}
 
 	if level == types.INFO {
 		log.Printf("[INFO] %s", message)
-		return
+		return nil
 	}
 
 	resolvedChannel := channel
@@ -124,7 +121,5 @@ func (l *Logger) CustomSend(provider string, level int, message string, attachme
 		}
 	}
 
-	if err := customProvider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel); err != nil {
-		log.Printf("[ERROR] Failed to send alert: %v", err)
-	}
+	return customProvider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel)
 }

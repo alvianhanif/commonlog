@@ -23,5 +23,7 @@ func TestSendInfo(t *testing.T) {
 	cfg := types.Config{}
 	logger := NewLogger(cfg)
 	// INFO level should not send, just log
-	logger.Send(types.INFO, "Test info message", nil, "")
+	if err := logger.Send(types.INFO, "Test info message", nil, ""); err != nil {
+		t.Errorf("Expected no error for INFO level, got %v", err)
+	}
 }

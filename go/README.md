@@ -37,16 +37,22 @@ func main() {
     logger := commonlog.NewLogger(cfg)
 
     // Send error with attachment
-    logger.Send(commonlog.ERROR, "System error occurred", &commonlog.Attachment{URL: "https://example.com/log.txt"})
+    if err := logger.Send(commonlog.ERROR, "System error occurred", &commonlog.Attachment{URL: "https://example.com/log.txt"}); err != nil {
+        log.Printf("Failed to send alert: %v", err)
+    }
 
     // Send info (logs only)
     logger.Send(commonlog.INFO, "Info message")
 
     // Send to a specific channel
-    logger.SendToChannel(commonlog.ERROR, "Send to another channel", nil, "", "another-channel-id")
+    if err := logger.SendToChannel(commonlog.ERROR, "Send to another channel", nil, "", "another-channel-id"); err != nil {
+        log.Printf("Failed to send alert: %v", err)
+    }
 
     // Send to a different provider dynamically
-    logger.CustomSend("slack", commonlog.ERROR, "Message via Slack", nil, "", "slack-channel")
+    if err := logger.CustomSend("slack", commonlog.ERROR, "Message via Slack", nil, "", "slack-channel"); err != nil {
+        log.Printf("Failed to send alert: %v", err)
+    }
 }
 ```
 

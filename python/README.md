@@ -32,16 +32,25 @@ config = Config(
 logger = commonlog(config)
 
 # Send error with attachment
-logger.send(AlertLevel.ERROR, "System error occurred", Attachment(url="https://example.com/log.txt"))
+try:
+    logger.send(AlertLevel.ERROR, "System error occurred", Attachment(url="https://example.com/log.txt"))
+except Exception as e:
+    print(f"Failed to send alert: {e}")
 
  # Send info (logs only)
 logger.send(AlertLevel.INFO, "Info message")
 
 # Send to a specific channel
-logger.send_to_channel(AlertLevel.ERROR, "Send to another channel", channel="another-channel-id")
+try:
+    logger.send_to_channel(AlertLevel.ERROR, "Send to another channel", channel="another-channel-id")
+except Exception as e:
+    print(f"Failed to send alert: {e}")
 
 # Send to a different provider dynamically
-logger.custom_send("slack", AlertLevel.ERROR, "Message via Slack", channel="slack-channel")
+try:
+    logger.custom_send("slack", AlertLevel.ERROR, "Message via Slack", channel="slack-channel")
+except Exception as e:
+    print(f"Failed to send alert: {e}")
 ```
 
 ## Send Methods
