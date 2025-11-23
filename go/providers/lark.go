@@ -347,7 +347,7 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	}
 	data, _ := json.Marshal(payload)
 
-	types.DebugLog(cfg, "sendLarkWebClient: sending HTTP request to Lark API, payload size: %d bytes", len(data))
+	types.DebugLog(cfg, "sendLarkWebClient: sending HTTP request to Lark API, payload size: %d bytes, payload: %s", len(data), string(data))
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	for k, v := range headers {
 		req.Header.Set(k, v)
@@ -419,7 +419,7 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 	}
 
 	data, _ := json.Marshal(payload)
-	types.DebugLog(cfg, "sendLarkWebhook: payload prepared, size: %d bytes", len(data))
+	types.DebugLog(cfg, "sendLarkWebhook: payload prepared, size: %d bytes, payload: %s", len(data), string(data))
 
 	req, _ := http.NewRequest("POST", webhookURL, bytes.NewBuffer(data))
 	req.Header.Set("Content-Type", "application/json")

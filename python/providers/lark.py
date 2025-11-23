@@ -194,7 +194,7 @@ class LarkProvider(Provider):
                 }
             }
         }
-        debug_log(config, f"send_lark_webclient: sending HTTP request, payload size: {len(str(payload))}")
+        debug_log(config, f"send_lark_webclient: sending HTTP request, payload size: {len(str(payload))}, payload: {json.dumps(payload)}")
         
         response = requests.post(url, headers=headers, json=payload)
         debug_log(config, f"send_lark_webclient: response status: {response.status_code}")
@@ -240,7 +240,7 @@ class LarkProvider(Provider):
                 }
             }
         }
-        debug_log(config, f"send_lark_webhook: payload prepared, size: {len(str(payload))}")
+        debug_log(config, f"send_lark_webhook: payload prepared, size: {len(str(payload))}, payload: {json.dumps(payload)}")
         response = requests.post(webhook_url, json=payload)
         debug_log(config, f"send_lark_webhook: response status: {response.status_code}, response data: {response.text}")
         if response.status_code != 200:
