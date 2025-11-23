@@ -6,6 +6,27 @@ on:
     tags: [ "*" ]
   pull_request:
     branches: [ "*" ]
+  workflow_dispatch:
+    inputs:
+      test_provider:
+        description: 'Provider to test (slack, lark, or both)'
+        required: false
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - slack
+          - lark
+      test_message:
+        description: 'Custom test message'
+        required: false
+        default: 'Manual integration test message'
+        type: string
+      debug_mode:
+        description: 'Enable debug logging'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   webhook-integration:
@@ -80,6 +101,7 @@ jobs:
         sleep 3
 
     - name: Test Slack webhook integration
+      if: ${{ github.event.inputs.test_provider == 'both' || github.event.inputs.test_provider == 'slack' }}
       run: |
         cd python
         python -c "
@@ -91,11 +113,12 @@ jobs:
             provider='slack',
             send_method=SendMethod.WEBHOOK,
             token='http://localhost:8080/webhook',
-            channel='#test'
+            channel='#test',
+            debug=${{ github.event.inputs.debug_mode || 'False' }}
         )
 
         logger = commonlog(config)
-        logger.info('Test Slack webhook message')
+        logger.info('${{ github.event.inputs.test_message || \"Test Slack webhook message\" }}')
 
         time.sleep(1)
         response = requests.get('http://localhost:8080/webhooks')
@@ -114,6 +137,7 @@ jobs:
         "
 
     - name: Test Lark webhook integration
+      if: ${{ github.event.inputs.test_provider == 'both' || github.event.inputs.test_provider == 'lark' }}
       run: |
         cd python
         python -c "
@@ -125,17 +149,19 @@ jobs:
             provider='lark',
             send_method=SendMethod.WEBHOOK,
             token='http://localhost:8080/webhook',
-            channel='test-channel'
+            channel='test-channel',
+            debug=${{ github.event.inputs.debug_mode || 'False' }}
         )
 
         logger = commonlog(config)
-        logger.info('Test Lark webhook message')
+        logger.info('${{ github.event.inputs.test_message || \"Test Lark webhook message\" }}')
 
         time.sleep(1)
         response = requests.get('http://localhost:8080/webhooks')
         webhooks = response.json()
 
-        if len(webhooks) >= 2:
+        expected_count = 2 if '${{ github.event.inputs.test_provider }}' == 'both' else 1
+        if len(webhooks) >= expected_count:
             print('✅ Lark webhook test passed')
             latest_webhook = webhooks[-1]['body']
             if isinstance(latest_webhook, dict) and 'msg_type' in latest_webhook:
@@ -143,7 +169,7 @@ jobs:
             else:
                 print('⚠️  Lark webhook payload structure may differ')
         else:
-            print(f'❌ Lark webhook test failed - expected 2+ webhooks, got {len(webhooks)}')
+            print(f'❌ Lark webhook test failed - expected {expected_count}+ webhooks, got {len(webhooks)}')
             exit(1)
         "
 
@@ -152,12 +178,30 @@ jobs:
         response=$(curl -s http://localhost:8080/webhooks)
         count=$(echo "$response" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
 
-        echo "Total webhooks received: $count"
+        provider="${{ github.event.inputs.test_provider || 'both' }}"
+        case $provider in
+          "both")
+            expected=2
+            ;;
+          "slack"|"lark")
+            expected=1
+            ;;
+          *)
+            expected=2
+            ;;
+        esac
 
-        if [ "$count" -ge 2 ]; then
+        echo "Provider tested: $provider"
+        echo "Total webhooks received: $count"
+        echo "Expected webhooks: $expected"
+
+        if [ "$count" -ge "$expected" ]; then
             echo "✅ Webhook integration tests passed!"
-            echo "Successfully tested: Slack webhook, Lark webhook"
+            echo "Successfully tested: $provider webhook(s)"
+            if [ "${{ github.event.inputs.debug_mode }}" = "true" ]; then
+              echo "Debug mode was enabled"
+            fi
         else
-            echo "❌ Integration test failed - expected at least 2 webhooks, got $count"
+            echo "❌ Integration test failed - expected at least $expected webhooks, got $count"
             exit 1
         fi
