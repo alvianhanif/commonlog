@@ -10,7 +10,11 @@ class LarkProvider(Provider):
     def send_to_channel(self, level, message, attachment, config, channel):
         original_channel = config.channel
         config.channel = channel
-        self.send(level, message, attachment, config)
+        title, formatted_message = self._format_message(message, attachment, config)
+        if config.send_method == SendMethod.WEBCLIENT:
+            self._send_lark_webclient(title, formatted_message, config)
+        elif config.send_method == SendMethod.WEBHOOK:
+            self._send_lark_webhook(title, formatted_message, config)
         config.channel = original_channel
 
     def cache_lark_token(self, config, app_id, app_secret, token, expire):
@@ -114,36 +118,38 @@ class LarkProvider(Provider):
 
     def send(self, level, message, attachment, config):
         debug_log(config, f"LarkProvider.send called with level: {level}, send method: {config.send_method}")
-        formatted_message = self._format_message(message, attachment, config)
+        title, formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
             debug_log(config, "Using Lark webclient method")
-            self._send_lark_webclient(formatted_message, config)
+            self._send_lark_webclient(title, formatted_message, config)
         elif config.send_method == SendMethod.WEBHOOK:
             debug_log(config, "Using Lark webhook method")
-            self._send_lark_webhook(formatted_message, config)
+            self._send_lark_webhook(title, formatted_message, config)
         else:
             error_msg = f"Unknown send method for Lark: {config.send_method}"
             debug_log(config, f"Error: {error_msg}")
             raise ValueError(error_msg)
 
     def _format_message(self, message, attachment, config):
-        formatted = ""
-        # Add service and environment header
+        # Extract title from service and environment
+        title = "Alert"
         if config.service_name and config.environment:
-            formatted += f"**[{config.service_name} - {config.environment}]**\n"
+            title = f"{config.service_name} - {config.environment}"
         elif config.service_name:
-            formatted += f"**[{config.service_name}]**\n"
+            title = config.service_name
         elif config.environment:
-            formatted += f"**[{config.environment}]**\n"
-        formatted += message
+            title = config.environment
+        
+        # Format message content without the header
+        formatted = message
         if attachment and attachment.content:
             filename = attachment.file_name or "Trace Logs"
             formatted += f"\n\n**{filename}:**\n```\n{attachment.content}\n```"
         if attachment and attachment.url:
             formatted += f"\n\n**Attachment:** {attachment.url}"
-        return json.dumps(formatted)
+        return title, json.dumps(formatted)
 
-    def _send_lark_webclient(self, formatted_message, config):
+    def _send_lark_webclient(self, title, formatted_message, config):
         debug_log(config, "send_lark_webclient: preparing API request")
         token = config.token
         
@@ -173,7 +179,7 @@ class LarkProvider(Provider):
             "content": {
                 "post": {
                     "zh_cn": {
-                        "title": "Alert",
+                        "title": title,
                         "content": [
                             [
                                 {
@@ -196,7 +202,7 @@ class LarkProvider(Provider):
             raise Exception(error_msg)
         debug_log(config, "send_lark_webclient: message sent successfully")
 
-    def _send_lark_webhook(self, formatted_message, config):
+    def _send_lark_webhook(self, title, formatted_message, config):
         debug_log(config, "send_lark_webhook: preparing webhook request")
         # For webhook, the token field contains the webhook URL
         webhook_url = config.token
@@ -211,7 +217,7 @@ class LarkProvider(Provider):
             "content": {
                 "post": {
                     "zh_cn": {
-                        "title": "Alert",
+                        "title": title,
                         "content": [
                             [
                                 {

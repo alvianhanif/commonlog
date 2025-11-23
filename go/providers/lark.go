@@ -250,20 +250,20 @@ func (p *LarkProvider) SendToChannel(level int, message string, attachment *type
 	}
 }
 
-// formatMessage formats the alert message with optional attachment
-func (p *LarkProvider) formatMessage(message string, attachment *types.Attachment, cfg types.Config) string {
-	formatted := ""
-
-	// Add service and environment header
+// formatMessage formats the alert message with optional attachment and returns title and content separately
+func (p *LarkProvider) formatMessage(message string, attachment *types.Attachment, cfg types.Config) (string, string) {
+	// Extract title from service and environment
+	title := "Alert"
 	if cfg.ServiceName != "" && cfg.Environment != "" {
-		formatted += fmt.Sprintf("**[%s - %s]**\n", cfg.ServiceName, cfg.Environment)
+		title = fmt.Sprintf("%s - %s", cfg.ServiceName, cfg.Environment)
 	} else if cfg.ServiceName != "" {
-		formatted += fmt.Sprintf("**[%s]**\n", cfg.ServiceName)
+		title = cfg.ServiceName
 	} else if cfg.Environment != "" {
-		formatted += fmt.Sprintf("**[%s]**\n", cfg.Environment)
+		title = cfg.Environment
 	}
 
-	formatted += message
+	// Format message content without the header
+	formatted := message
 
 	if attachment != nil {
 		if attachment.Content != "" {
@@ -281,12 +281,12 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 	}
 
 	messageContent, _ := json.Marshal(formatted)
-	return string(messageContent)
+	return title, string(messageContent)
 }
 
 func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
 	types.DebugLog(cfg, "sendLarkWebClient: formatting message and preparing API request")
-	formattedMessage := p.formatMessage(message, attachment, cfg)
+	title, formattedMessage := p.formatMessage(message, attachment, cfg)
 	token := cfg.Token
 
 	types.DebugLog(cfg, "sendLarkWebClient: sending to channel '%s'", cfg.Channel)
@@ -324,7 +324,7 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		"content": map[string]interface{}{
 			"post": map[string]interface{}{
 				"zh_cn": map[string]interface{}{
-					"title": "Alert",
+					"title": title,
 					"content": []interface{}{
 						[]interface{}{
 							map[string]interface{}{
@@ -372,7 +372,7 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 
 func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachment, cfg types.Config) error {
 	types.DebugLog(cfg, "sendLarkWebhook: formatting message and preparing webhook request")
-	formattedMessage := p.formatMessage(message, attachment, cfg)
+	title, formattedMessage := p.formatMessage(message, attachment, cfg)
 
 	// For webhook, the token field contains the webhook URL
 	webhookURL := cfg.Token
@@ -388,7 +388,7 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 		"content": map[string]interface{}{
 			"post": map[string]interface{}{
 				"zh_cn": map[string]interface{}{
-					"title": "Alert",
+					"title": title,
 					"content": []interface{}{
 						[]interface{}{
 							map[string]interface{}{
