@@ -377,7 +377,7 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 
 	payload := map[string]interface{}{
 		"msg_type": "text",
-		"content":  contentJSON,
+		"content":  string(contentJSON),
 	}
 
 	data, _ := json.Marshal(payload)
