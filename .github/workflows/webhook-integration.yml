@@ -1,0 +1,163 @@
+name: Webhook Integration Tests
+
+on:
+  push:
+    branches: [ "*" ]
+    tags: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  webhook-integration:
+    runs-on: ubuntu-20.04
+
+    services:
+      # Redis for Lark token caching
+      redis:
+        image: redis:6-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      working-directory: ./python
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        pip install flask requests
+
+    - name: Start webhook test server
+      run: |
+        python -c "
+        from flask import Flask, request, jsonify
+        import json
+        import threading
+        import time
+
+        app = Flask(__name__)
+        received_webhooks = []
+
+        @app.route('/webhook', methods=['POST'])
+        def webhook():
+            try:
+                data = request.get_json() if request.is_json else request.get_data(as_text=True)
+                received_webhooks.append({
+                    'headers': dict(request.headers),
+                    'body': data,
+                    'timestamp': time.time()
+                })
+                print(f'Received webhook: {json.dumps(data, indent=2) if isinstance(data, dict) else str(data)[:200]}...')
+                return jsonify({'status': 'ok'}), 200
+            except Exception as e:
+                print(f'Error processing webhook: {e}')
+                return jsonify({'error': str(e)}), 400
+
+        @app.route('/webhooks', methods=['GET'])
+        def get_webhooks():
+            return jsonify(received_webhooks), 200
+
+        def run_server():
+            app.run(host='0.0.0.0', port=8080, debug=False, threaded=True)
+
+        server_thread = threading.Thread(target=run_server, daemon=True)
+        server_thread.start()
+        time.sleep(2)
+        print('Webhook test server started on port 8080')
+        " > server.log 2>&1 &
+        sleep 3
+
+    - name: Test Slack webhook integration
+      run: |
+        cd python
+        python -c "
+        from commonlog import Config, SendMethod, commonlog
+        import requests
+        import time
+
+        config = Config(
+            provider='slack',
+            send_method=SendMethod.WEBHOOK,
+            token='http://localhost:8080/webhook',
+            channel='#test'
+        )
+
+        logger = commonlog(config)
+        logger.info('Test Slack webhook message')
+
+        time.sleep(1)
+        response = requests.get('http://localhost:8080/webhooks')
+        webhooks = response.json()
+
+        if len(webhooks) > 0:
+            print('✅ Slack webhook test passed')
+            webhook_data = webhooks[0]['body']
+            if isinstance(webhook_data, dict) and 'text' in webhook_data:
+                print('✅ Slack webhook payload structure correct')
+            else:
+                print('⚠️  Slack webhook payload structure may differ')
+        else:
+            print('❌ Slack webhook test failed - no webhook received')
+            exit(1)
+        "
+
+    - name: Test Lark webhook integration
+      run: |
+        cd python
+        python -c "
+        from commonlog import Config, SendMethod, commonlog
+        import requests
+        import time
+
+        config = Config(
+            provider='lark',
+            send_method=SendMethod.WEBHOOK,
+            token='http://localhost:8080/webhook',
+            channel='test-channel'
+        )
+
+        logger = commonlog(config)
+        logger.info('Test Lark webhook message')
+
+        time.sleep(1)
+        response = requests.get('http://localhost:8080/webhooks')
+        webhooks = response.json()
+
+        if len(webhooks) >= 2:
+            print('✅ Lark webhook test passed')
+            latest_webhook = webhooks[-1]['body']
+            if isinstance(latest_webhook, dict) and 'msg_type' in latest_webhook:
+                print('✅ Lark webhook payload structure correct')
+            else:
+                print('⚠️  Lark webhook payload structure may differ')
+        else:
+            print(f'❌ Lark webhook test failed - expected 2+ webhooks, got {len(webhooks)}')
+            exit(1)
+        "
+
+    - name: Verify integration results
+      run: |
+        response=$(curl -s http://localhost:8080/webhooks)
+        count=$(echo "$response" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
+
+        echo "Total webhooks received: $count"
+
+        if [ "$count" -ge 2 ]; then
+            echo "✅ Webhook integration tests passed!"
+            echo "Successfully tested: Slack webhook, Lark webhook"
+        else
+            echo "❌ Integration test failed - expected at least 2 webhooks, got $count"
+            exit 1
+        fi
