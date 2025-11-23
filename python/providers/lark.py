@@ -116,6 +116,8 @@ class LarkProvider(Provider):
         formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
             self._send_lark_webclient(formatted_message, config)
+        elif config.send_method == SendMethod.WEBHOOK:
+            self._send_lark_webhook(formatted_message, config)
         else:
             raise ValueError(f"Unknown send method for Lark: {config.send_method}")
 
@@ -134,7 +136,7 @@ class LarkProvider(Provider):
             formatted += f"\n\n**{filename}:**\n```\n{attachment.content}\n```"
         if attachment and attachment.url:
             formatted += f"\n\n**Attachment:** {attachment.url}"
-        return formatted
+        return json.dumps(formatted)
 
     def _send_lark_webclient(self, formatted_message, config):
         token = config.token
@@ -158,3 +160,19 @@ class LarkProvider(Provider):
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code != 200:
             raise Exception(f"Lark WebClient response: {response.status_code}")
+
+    def _send_lark_webhook(self, formatted_message, config):
+        # For webhook, the token field contains the webhook URL
+        webhook_url = config.token
+        if not webhook_url:
+            raise Exception("Webhook URL is required for Lark webhook method")
+        
+        payload = {
+            "msg_type": "text",
+            "content": {
+                "text": formatted_message
+            }
+        }
+        response = requests.post(webhook_url, json=payload)
+        if response.status_code != 200:
+            raise Exception(f"Lark webhook response: {response.status_code}")

@@ -15,6 +15,8 @@ class SlackProvider(Provider):
         formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
             self._send_slack_webclient(formatted_message, config)
+        elif config.send_method == SendMethod.WEBHOOK:
+            self._send_slack_webhook(formatted_message, config)
         else:
             raise ValueError(f"Unknown send method for Slack: {config.send_method}")
 
@@ -51,3 +53,18 @@ class SlackProvider(Provider):
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code != 200:
             raise Exception(f"Slack WebClient response: {response.status_code}")
+
+    def _send_slack_webhook(self, formatted_message, config):
+        # For webhook, the token field contains the webhook URL
+        webhook_url = config.token
+        if not webhook_url:
+            raise Exception("Webhook URL is required for Slack webhook method")
+        
+        payload = {"text": formatted_message}
+        # If channel is specified, include it in the payload
+        if config.channel:
+            payload["channel"] = config.channel
+        
+        response = requests.post(webhook_url, json=payload)
+        if response.status_code != 200:
+            raise Exception(f"Slack webhook response: {response.status_code}")

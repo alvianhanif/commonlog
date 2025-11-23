@@ -236,6 +236,8 @@ func (p *LarkProvider) SendToChannel(level int, message string, attachment *type
 	switch cfgCopy.SendMethod {
 	case types.MethodWebClient:
 		return p.sendLarkWebClient(message, attachment, cfgCopy)
+	case types.MethodWebhook:
+		return p.sendLarkWebhook(message, attachment, cfgCopy)
 	default:
 		return fmt.Errorf("unknown send method for Lark: %s", cfgCopy.SendMethod)
 	}
@@ -304,9 +306,10 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 
 	url := "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
 	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
-	contentStruct := map[string]string{
+	contentStruct, _ := json.Marshal(map[string]string{
 		"text": formattedMessage,
-	}
+	})
+
 	payload := map[string]interface{}{
 		"receive_id": chatID,
 		"msg_type":   "text",
@@ -340,5 +343,52 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		return fmt.Errorf("lark WebClient response: %d", resp.StatusCode)
 	}
 	fmt.Printf("[Lark] Message sent successfully to channel '%s'. Response: %s\n", cfg.Channel, respBody.String())
+	return nil
+}
+
+func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachment, cfg types.Config) error {
+	formattedMessage := p.formatMessage(message, attachment, cfg)
+
+	// For webhook, the token field contains the webhook URL
+	webhookURL := cfg.Token
+	if webhookURL == "" {
+		return fmt.Errorf("webhook URL is required for Lark webhook method")
+	}
+
+	contentJSON, _ := json.Marshal(map[string]string{
+		"text": formattedMessage,
+	})
+
+	payload := map[string]interface{}{
+		"msg_type": "text",
+		"content":  contentJSON,
+	}
+
+	data, _ := json.Marshal(payload)
+	fmt.Printf("[Lark] Sending webhook to URL: %s, payload: %s\n", webhookURL, string(data))
+	req, _ := http.NewRequest("POST", webhookURL, bytes.NewBuffer(data))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Printf("[Lark] Error sending webhook request: %v\n", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Log response data
+	respBody := new(bytes.Buffer)
+	_, copyErr := respBody.ReadFrom(resp.Body)
+	if copyErr != nil {
+		fmt.Printf("[Lark] Error reading response body: %v\n", copyErr)
+	} else {
+		fmt.Printf("[Lark] Response data: %s\n", respBody.String())
+	}
+
+	if resp.StatusCode != 200 {
+		fmt.Printf("[Lark] Webhook response status: %d\n", resp.StatusCode)
+		return fmt.Errorf("lark webhook response: %d", resp.StatusCode)
+	}
+	fmt.Printf("[Lark] Webhook sent successfully. Response: %s\n", respBody.String())
 	return nil
 }

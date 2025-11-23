@@ -1,6 +1,6 @@
 # commonlog (Python)
 
-A unified logging and alerting library for Python, supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
+A unified logging and alerting library for Python, supporting Slack and Lark integrations via WebClient and Webhook. Features configurable providers, alert levels, and file attachment support.
 
 ## Installation
 
@@ -42,6 +42,40 @@ logger.send_to_channel(AlertLevel.ERROR, "Send to another channel", channel="ano
 
 # Send to a different provider dynamically
 logger.custom_send("slack", AlertLevel.ERROR, "Message via Slack", channel="slack-channel")
+```
+
+## Send Methods
+
+commonlog supports two send methods: WebClient (API-based) and Webhook (simple HTTP POST).
+
+### WebClient Usage
+
+WebClient uses the full API with authentication tokens:
+
+```python
+config = Config(
+    provider="lark",
+    send_method=SendMethod.WEBCLIENT,
+    token="app_id++app_secret",  # for Lark
+    slack_token="xoxb-your-slack-token",  # for Slack
+    lark_token=LarkToken(app_id="your-app-id", app_secret="your-app-secret"),
+    channel="your_channel",
+    redis_host="localhost",  # required for Lark
+    redis_port="6379",
+)
+```
+
+### Webhook Usage
+
+Webhook is simpler and requires only a webhook URL:
+
+```python
+config = Config(
+    provider="slack",
+    send_method=SendMethod.WEBHOOK,
+    token="https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    channel="optional-channel-override",  # optional
+)
 ```
 
 ### Lark Token Caching

@@ -1,6 +1,6 @@
 # commonlog
 
-A unified logging and alerting library supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
+A unified logging and alerting library supporting Slack and Lark integrations via WebClient and Webhook. Features configurable providers, alert levels, and file attachment support.
 
 Available in [Go](./go/README.md) and [Python](./python/README.md).
 
@@ -9,6 +9,7 @@ Available in [Go](./go/README.md) and [Python](./python/README.md).
 ## Features
 
 - **Multi-Provider**: Slack and Lark
+- **Multiple Send Methods**: WebClient (API-based) and Webhook (simple HTTP POST)
 - **Secure Authentication**: WebClient with token-based authentication
 - **Provider-Specific Tokens**: Dedicated `SlackToken` and `LarkToken` fields for secure, provider-specific authentication
 - **Dynamic Provider Selection**: Use `CustomSend` (Go) or `custom_send` (Python) to send messages to different providers dynamically
@@ -18,6 +19,7 @@ Available in [Go](./go/README.md) and [Python](./python/README.md).
 - **Extensible**: Easy to add new alert providers
 - **Send to Specific Channel**: Use `SendToChannel` (Go) or `send_to_channel` (Python) to override the default channel for any alert.
 - **Redis Token Caching for Lark**: Lark tenant_access_token is cached in Redis for performance. Expiry is set dynamically from the API response minus 10 minutes.
+- **Environment-Aware Chat ID Caching**: Lark chat IDs are cached per environment to prevent cross-environment conflicts.
 
 ## Redis Configuration (Lark)
 
@@ -30,28 +32,45 @@ If these fields are missing, Lark token caching will fail.
 
 ## Authentication
 
-### Provider-Specific Tokens
+### Send Methods
 
-For enhanced security and flexibility, you can use provider-specific token fields:
+commonlog supports two send methods:
+
+#### WebClient (API-based)
+
+- **Slack**: Uses Slack's Web API with bot tokens
+- **Lark**: Uses Lark's Open API with app credentials and token caching
+- **Authentication**: Requires API tokens and proper authentication
+- **Features**: Full API features, channel management, rich formatting
+
+#### Webhook (Simple HTTP POST)
+
+- **Slack**: Uses Slack Incoming Webhooks
+- **Lark**: Uses Lark Webhooks
+- **Authentication**: Just provide the webhook URL as the token
+- **Features**: Simple, no authentication setup required, perfect for basic alerting
+
+**Webhook Usage:**
 
 **Go:**
+
 ```go
 config := commonlog.Config{
-    SlackToken: "xoxb-your-slack-token",
-    LarkToken: commonlog.LarkTokenConfig{
-        AppID:     "your-app-id", 
-        AppSecret: "your-app-secret",
-    },
-    // ... other config
+    Provider:   "slack",
+    SendMethod: commonlog.MethodWebhook,
+    Token:      "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    Channel:    "optional-channel-override", // optional
 }
 ```
 
 **Python:**
+
 ```python
 config = Config(
-    slack_token="xoxb-your-slack-token",
-    lark_token=LarkToken(app_id="your-app-id", app_secret="your-app-secret"),
-    # ... other config
+    provider="slack",
+    send_method=SendMethod.WEBHOOK,
+    token="https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    channel="optional-channel-override",  # optional
 )
 ```
 
@@ -60,11 +79,13 @@ config = Config(
 Use `CustomSend` (Go) or `custom_send` (Python) to send messages to different providers dynamically, overriding the default provider:
 
 **Go:**
+
 ```go
 logger.CustomSend("slack", commonlog.ERROR, "Message via Slack", nil, "", "slack-channel")
 ```
 
 **Python:**
+
 ```python
 logger.custom_send("slack", AlertLevel.ERROR, "Message via Slack", channel="slack-channel")
 ```

@@ -1,6 +1,6 @@
 # commonlog (Go)
 
-A unified logging and alerting library for Go, supporting Slack and Lark integrations via WebClient. Features configurable providers, alert levels, and file attachment support.
+A unified logging and alerting library for Go, supporting Slack and Lark integrations via WebClient and Webhook. Features configurable providers, alert levels, and file attachment support.
 
 ## Installation
 
@@ -47,6 +47,43 @@ func main() {
 
     // Send to a different provider dynamically
     logger.CustomSend("slack", commonlog.ERROR, "Message via Slack", nil, "", "slack-channel")
+}
+```
+
+## Send Methods
+
+commonlog supports two send methods: WebClient (API-based) and Webhook (simple HTTP POST).
+
+### WebClient Usage
+
+WebClient uses the full API with authentication tokens:
+
+```go
+cfg := commonlog.Config{
+    Provider:   "lark",
+    SendMethod: commonlog.MethodWebClient,
+    Token:      "app_id++app_secret", // for Lark
+    SlackToken: "xoxb-your-slack-token", // for Slack
+    LarkToken: commonlog.LarkTokenConfig{
+        AppID:     "your-app-id",
+        AppSecret: "your-app-secret",
+    },
+    Channel:   "your_channel",
+    RedisHost: "localhost", // required for Lark
+    RedisPort: "6379",
+}
+```
+
+### Webhook Usage
+
+Webhook is simpler and requires only a webhook URL:
+
+```go
+cfg := commonlog.Config{
+    Provider:   "slack",
+    SendMethod: commonlog.MethodWebhook,
+    Token:      "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    Channel:    "optional-channel-override", // optional
 }
 ```
 
