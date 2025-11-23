@@ -8,25 +8,19 @@ on:
     branches: [ "*" ]
   workflow_dispatch:
     inputs:
-      test_provider:
-        description: 'Provider to test (slack, lark, or both)'
-        required: false
-        default: 'both'
+      provider:
+        description: 'Provider to test'
+        required: true
+        default: 'slack'
         type: choice
         options:
-          - both
           - slack
           - lark
-      test_message:
-        description: 'Custom test message'
-        required: false
-        default: 'Manual integration test message'
+      webhook_url:
+        description: 'Webhook URL to test against'
+        required: true
+        default: 'http://localhost:8080/webhook'
         type: string
-      debug_mode:
-        description: 'Enable debug logging'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   webhook-integration:
@@ -100,8 +94,7 @@ jobs:
         " > server.log 2>&1 &
         sleep 3
 
-    - name: Test Slack webhook integration
-      if: ${{ github.event.inputs.test_provider == 'both' || github.event.inputs.test_provider == 'slack' }}
+    - name: Test webhook integration
       run: |
         cd python
         python -c "
@@ -110,98 +103,59 @@ jobs:
         import time
 
         config = Config(
-            provider='slack',
+            provider='${{ github.event.inputs.provider }}',
             send_method=SendMethod.WEBHOOK,
-            token='http://localhost:8080/webhook',
-            channel='#test',
-            debug=${{ github.event.inputs.debug_mode || 'False' }}
+            token='${{ github.event.inputs.webhook_url }}',
+            channel='#test' if '${{ github.event.inputs.provider }}' == 'slack' else 'test-channel',
+            debug=True
         )
 
         logger = commonlog(config)
-        logger.info('${{ github.event.inputs.test_message || \"Test Slack webhook message\" }}')
+        logger.info('Manual webhook integration test for ${{ github.event.inputs.provider }}')
 
         time.sleep(1)
-        response = requests.get('http://localhost:8080/webhooks')
+        response = requests.get('${{ github.event.inputs.webhook_url }}'.replace('/webhook', '/webhooks'))
         webhooks = response.json()
 
         if len(webhooks) > 0:
-            print('✅ Slack webhook test passed')
+            print('✅ ${{ github.event.inputs.provider }} webhook test passed')
             webhook_data = webhooks[0]['body']
-            if isinstance(webhook_data, dict) and 'text' in webhook_data:
-                print('✅ Slack webhook payload structure correct')
-            else:
-                print('⚠️  Slack webhook payload structure may differ')
+            if '${{ github.event.inputs.provider }}' == 'slack':
+                if isinstance(webhook_data, dict) and 'text' in webhook_data:
+                    print('✅ Slack webhook payload structure correct')
+                else:
+                    print('⚠️  Slack webhook payload structure may differ')
+            else:  # lark
+                if isinstance(webhook_data, dict) and 'msg_type' in webhook_data:
+                    print('✅ Lark webhook payload structure correct')
+                else:
+                    print('⚠️  Lark webhook payload structure may differ')
         else:
-            print('❌ Slack webhook test failed - no webhook received')
-            exit(1)
-        "
-
-    - name: Test Lark webhook integration
-      if: ${{ github.event.inputs.test_provider == 'both' || github.event.inputs.test_provider == 'lark' }}
-      run: |
-        cd python
-        python -c "
-        from commonlog import Config, SendMethod, commonlog
-        import requests
-        import time
-
-        config = Config(
-            provider='lark',
-            send_method=SendMethod.WEBHOOK,
-            token='http://localhost:8080/webhook',
-            channel='test-channel',
-            debug=${{ github.event.inputs.debug_mode || 'False' }}
-        )
-
-        logger = commonlog(config)
-        logger.info('${{ github.event.inputs.test_message || \"Test Lark webhook message\" }}')
-
-        time.sleep(1)
-        response = requests.get('http://localhost:8080/webhooks')
-        webhooks = response.json()
-
-        expected_count = 2 if '${{ github.event.inputs.test_provider }}' == 'both' else 1
-        if len(webhooks) >= expected_count:
-            print('✅ Lark webhook test passed')
-            latest_webhook = webhooks[-1]['body']
-            if isinstance(latest_webhook, dict) and 'msg_type' in latest_webhook:
-                print('✅ Lark webhook payload structure correct')
-            else:
-                print('⚠️  Lark webhook payload structure may differ')
-        else:
-            print(f'❌ Lark webhook test failed - expected {expected_count}+ webhooks, got {len(webhooks)}')
+            print('❌ ${{ github.event.inputs.provider }} webhook test failed - no webhook received')
             exit(1)
         "
 
     - name: Verify integration results
       run: |
-        response=$(curl -s http://localhost:8080/webhooks)
+        webhook_base="${{ github.event.inputs.webhook_url }}"
+        webhooks_url="${webhook_base%/webhook}/webhooks"
+
+        response=$(curl -s "$webhooks_url")
         count=$(echo "$response" | python3 -c "import sys, json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
 
-        provider="${{ github.event.inputs.test_provider || 'both' }}"
-        case $provider in
-          "both")
-            expected=2
-            ;;
-          "slack"|"lark")
-            expected=1
-            ;;
-          *)
-            expected=2
-            ;;
-        esac
+        provider="${{ github.event.inputs.provider }}"
+        expected=1
 
         echo "Provider tested: $provider"
+        echo "Webhook URL: $webhook_base"
         echo "Total webhooks received: $count"
         echo "Expected webhooks: $expected"
+        echo "Debug mode: enabled"
 
         if [ "$count" -ge "$expected" ]; then
-            echo "✅ Webhook integration tests passed!"
-            echo "Successfully tested: $provider webhook(s)"
-            if [ "${{ github.event.inputs.debug_mode }}" = "true" ]; then
-              echo "Debug mode was enabled"
-            fi
+            echo "✅ Webhook integration test passed!"
+            echo "Successfully tested: $provider webhook"
         else
-            echo "❌ Integration test failed - expected at least $expected webhooks, got $count"
+            echo "❌ Integration test failed - expected at least $expected webhook, got $count"
             exit 1
         fi
