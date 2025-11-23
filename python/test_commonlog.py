@@ -1,6 +1,11 @@
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+
 import unittest
 from unittest.mock import Mock, patch
-from commonlog import Config, SendMethod, AlertLevel, Attachment, commonlog
+from log_types import Config, SendMethod, AlertLevel, Attachment
+from logger import commonlog
 
 class Testcommonlog(unittest.TestCase):
     def test_init(self):
@@ -166,7 +171,7 @@ class Testcommonlog(unittest.TestCase):
             mock_send.assert_called_once()
 
     def test_resolve_channel_with_resolver(self):
-        from commonlog.log_types import DefaultChannelResolver
+        from log_types import DefaultChannelResolver
         resolver = DefaultChannelResolver(
             channel_map={AlertLevel.ERROR: "#errors", AlertLevel.WARN: "#warnings"},
             default_channel="#general"
