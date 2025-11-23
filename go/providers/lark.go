@@ -320,25 +320,17 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 
 	payload := map[string]interface{}{
 		"receive_id": chatID,
-		"msg_type":   "interactive",
+		"msg_type":   "post",
 		"content": map[string]interface{}{
-			"card": map[string]interface{}{
-				"config": map[string]interface{}{
-					"wide_screen_mode": true,
-				},
-				"header": map[string]interface{}{
-					"template": "blue",
-					"title": map[string]interface{}{
-						"tag":     "plain_text",
-						"content": "Alert",
-					},
-				},
-				"elements": []interface{}{
-					map[string]interface{}{
-						"tag": "div",
-						"text": map[string]interface{}{
-							"tag":     "lark_md",
-							"content": formattedMessage,
+			"post": map[string]interface{}{
+				"zh_cn": map[string]interface{}{
+					"title": "Alert",
+					"content": []interface{}{
+						[]interface{}{
+							map[string]interface{}{
+								"tag":  "text",
+								"text": formattedMessage,
+							},
 						},
 					},
 				},
@@ -392,25 +384,17 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 	types.DebugLog(cfg, "sendLarkWebhook: using webhook URL (length: %d)", len(webhookURL))
 
 	payload := map[string]interface{}{
-		"msg_type": "interactive",
+		"msg_type": "post",
 		"content": map[string]interface{}{
-			"card": map[string]interface{}{
-				"config": map[string]interface{}{
-					"wide_screen_mode": true,
-				},
-				"header": map[string]interface{}{
-					"template": "blue",
-					"title": map[string]interface{}{
-						"tag":     "plain_text",
-						"content": "Alert",
-					},
-				},
-				"elements": []interface{}{
-					map[string]interface{}{
-						"tag": "div",
-						"text": map[string]interface{}{
-							"tag":     "lark_md",
-							"content": formattedMessage,
+			"post": map[string]interface{}{
+				"zh_cn": map[string]interface{}{
+					"title": "Alert",
+					"content": []interface{}{
+						[]interface{}{
+							map[string]interface{}{
+								"tag":  "text",
+								"text": formattedMessage,
+							},
 						},
 					},
 				},

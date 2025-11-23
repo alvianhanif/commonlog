@@ -169,28 +169,20 @@ class LarkProvider(Provider):
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         payload = {
             "receive_id": chat_id,
-            "msg_type": "interactive",
+            "msg_type": "post",
             "content": {
-                "card": {
-                    "config": {
-                        "wide_screen_mode": True,
-                    },
-                    "header": {
-                        "template": "blue",
-                        "title": {
-                            "tag": "plain_text",
-                            "content": "Alert"
-                        }
-                    },
-                    "elements": [
-                        {
-                            "tag": "div",
-                            "text": {
-                                "tag": "lark_md",
-                                "content": formatted_message
-                            }
-                        }
-                    ]
+                "post": {
+                    "zh_cn": {
+                        "title": "Alert",
+                        "content": [
+                            [
+                                {
+                                    "tag": "text",
+                                    "text": formatted_message
+                                }
+                            ]
+                        ]
+                    }
                 }
             }
         }
@@ -215,28 +207,20 @@ class LarkProvider(Provider):
         
         debug_log(config, "send_lark_webhook: using webhook URL")
         payload = {
-            "msg_type": "interactive",
+            "msg_type": "post",
             "content": {
-                "card": {
-                    "config": {
-                        "wide_screen_mode": True,
-                    },
-                    "header": {
-                        "template": "blue",
-                        "title": {
-                            "tag": "plain_text",
-                            "content": "Alert"
-                        }
-                    },
-                    "elements": [
-                        {
-                            "tag": "div",
-                            "text": {
-                                "tag": "lark_md",
-                                "content": formatted_message
-                            }
-                        }
-                    ]
+                "post": {
+                    "zh_cn": {
+                        "title": "Alert",
+                        "content": [
+                            [
+                                {
+                                    "tag": "text",
+                                    "text": formatted_message
+                                }
+                            ]
+                        ]
+                    }
                 }
             }
         }
