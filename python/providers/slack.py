@@ -2,7 +2,15 @@
 Slack Provider for commonlog
 """
 import requests
-from ..log_types import SendMethod, Provider, debug_log
+import sys
+import os
+
+# Add parent directory to path for imports
+_parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
+
+from log_types import SendMethod, Provider, debug_log
 
 class SlackProvider(Provider):
     def send_to_channel(self, level, message, attachment, config, channel):

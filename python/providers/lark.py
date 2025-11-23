@@ -3,8 +3,16 @@ Lark Provider for commonlog
 """
 import requests
 import json
-from ..log_types import SendMethod, Provider, debug_log
-from .redis_client import get_redis_client, RedisConfigError
+import sys
+import os
+
+# Add parent directory to path for imports
+_parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _parent_dir not in sys.path:
+    sys.path.insert(0, _parent_dir)
+
+from log_types import SendMethod, Provider, debug_log
+from redis_client import get_redis_client, RedisConfigError
 
 class LarkProvider(Provider):
     def send_to_channel(self, level, message, attachment, config, channel):
