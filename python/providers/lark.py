@@ -170,13 +170,15 @@ class LarkProvider(Provider):
         payload = {
             "receive_id": chat_id,
             "msg_type": "interactive",
-            "card": {
+            "content":{
+                "card": {
                 "elements": [
                     {
                         "tag": "markdown",
                         "content": formatted_message
                     }
                 ]
+                }
             }
         }
         debug_log(config, f"send_lark_webclient: sending HTTP request, payload size: {len(str(payload))}")
@@ -201,13 +203,15 @@ class LarkProvider(Provider):
         debug_log(config, "send_lark_webhook: using webhook URL")
         payload = {
             "msg_type": "interactive",
-            "card": {
+            "content":{
+                "card": {
                 "elements": [
                     {
                         "tag": "markdown",
                         "content": formatted_message
                     }
                 ]
+                }
             }
         }
         debug_log(config, f"send_lark_webhook: payload prepared, size: {len(str(payload))}")

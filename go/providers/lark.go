@@ -321,11 +321,13 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	payload := map[string]interface{}{
 		"receive_id": chatID,
 		"msg_type":   "interactive",
-		"card": map[string]interface{}{
-			"elements": []map[string]interface{}{
-				{
-					"tag":     "markdown",
-					"content": formattedMessage,
+		"content": map[string]interface{}{
+			"card": map[string]interface{}{
+				"elements": []map[string]interface{}{
+					{
+						"tag":     "markdown",
+						"content": formattedMessage,
+					},
 				},
 			},
 		},
@@ -378,11 +380,13 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 
 	payload := map[string]interface{}{
 		"msg_type": "interactive",
-		"card": map[string]interface{}{
-			"elements": []map[string]interface{}{
-				{
-					"tag":     "markdown",
-					"content": formattedMessage,
+		"content": map[string]interface{}{
+			"card": map[string]interface{}{
+				"elements": []map[string]interface{}{
+					{
+						"tag":     "markdown",
+						"content": formattedMessage,
+					},
 				},
 			},
 		},
