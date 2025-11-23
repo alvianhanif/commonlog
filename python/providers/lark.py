@@ -167,8 +167,18 @@ class LarkProvider(Provider):
         
         url = "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        content = json.dumps({"text": formatted_message})
-        payload = {"receive_id": chat_id, "msg_type": "text", "content": content}
+        payload = {
+            "receive_id": chat_id,
+            "msg_type": "interactive",
+            "card": {
+                "elements": [
+                    {
+                        "tag": "markdown",
+                        "content": formatted_message
+                    }
+                ]
+            }
+        }
         debug_log(config, f"send_lark_webclient: sending HTTP request, payload size: {len(str(payload))}")
         
         response = requests.post(url, headers=headers, json=payload)
@@ -190,9 +200,14 @@ class LarkProvider(Provider):
         
         debug_log(config, "send_lark_webhook: using webhook URL")
         payload = {
-            "msg_type": "text",
-            "content": {
-                "text": formatted_message
+            "msg_type": "interactive",
+            "card": {
+                "elements": [
+                    {
+                        "tag": "markdown",
+                        "content": formatted_message
+                    }
+                ]
             }
         }
         debug_log(config, f"send_lark_webhook: payload prepared, size: {len(str(payload))}")

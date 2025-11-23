@@ -280,7 +280,8 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 		}
 	}
 
-	return formatted
+	messageContent, _ := json.Marshal(formatted)
+	return string(messageContent)
 }
 
 func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
@@ -316,14 +317,18 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 
 	url := "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
 	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
-	contentStruct, _ := json.Marshal(map[string]string{
-		"text": formattedMessage,
-	})
 
 	payload := map[string]interface{}{
 		"receive_id": chatID,
-		"msg_type":   "text",
-		"content":    contentStruct,
+		"msg_type":   "interactive",
+		"card": map[string]interface{}{
+			"elements": []map[string]interface{}{
+				{
+					"tag":     "markdown",
+					"content": formattedMessage,
+				},
+			},
+		},
 	}
 	data, _ := json.Marshal(payload)
 
@@ -371,13 +376,16 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 	}
 	types.DebugLog(cfg, "sendLarkWebhook: using webhook URL (length: %d)", len(webhookURL))
 
-	contentJSON, _ := json.Marshal(map[string]string{
-		"text": formattedMessage,
-	})
-
 	payload := map[string]interface{}{
-		"msg_type": "text",
-		"content":  string(contentJSON),
+		"msg_type": "interactive",
+		"card": map[string]interface{}{
+			"elements": []map[string]interface{}{
+				{
+					"tag":     "markdown",
+					"content": formattedMessage,
+				},
+			},
+		},
 	}
 
 	data, _ := json.Marshal(payload)
