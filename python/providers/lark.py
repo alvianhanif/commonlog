@@ -172,6 +172,9 @@ class LarkProvider(Provider):
             "msg_type": "interactive",
             "content": {
                 "card": {
+                    "config": {
+                        "wide_screen_mode": True,
+                    },
                     "header": {
                         "template": "blue",
                         "title": {
@@ -215,6 +218,9 @@ class LarkProvider(Provider):
             "msg_type": "interactive",
             "content": {
                 "card": {
+                    "config": {
+                        "wide_screen_mode": True,
+                    },
                     "header": {
                         "template": "blue",
                         "title": {

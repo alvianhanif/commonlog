@@ -323,6 +323,9 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		"msg_type":   "interactive",
 		"content": map[string]interface{}{
 			"card": map[string]interface{}{
+				"config": map[string]interface{}{
+					"wide_screen_mode": true,
+				},
 				"header": map[string]interface{}{
 					"template": "blue",
 					"title": map[string]interface{}{
@@ -392,6 +395,9 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 		"msg_type": "interactive",
 		"content": map[string]interface{}{
 			"card": map[string]interface{}{
+				"config": map[string]interface{}{
+					"wide_screen_mode": true,
+				},
 				"header": map[string]interface{}{
 					"template": "blue",
 					"title": map[string]interface{}{
