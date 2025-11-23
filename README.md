@@ -3,6 +3,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.19+-00ADD8?style=flat&logo=go)](https://golang.org/)
 [![Python Version](https://img.shields.io/badge/Python-3.6+-3776AB?style=flat&logo=python)](https://www.python.org/)
 [![PyPI Version](https://img.shields.io/pypi/v/commonlog.svg)](https://pypi.org/project/commonlog/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A unified logging and alerting library supporting Slack and Lark integrations via WebClient and Webhook. Features configurable providers, alert levels, and file attachment support.
 
