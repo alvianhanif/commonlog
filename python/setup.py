@@ -20,7 +20,7 @@ setup(
     packages=find_packages(),
     install_requires=[],
     license="MIT",
-    python_requires=">=3.6",
+    python_requires=">=3.8",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
