@@ -151,7 +151,7 @@ class Testcommonlog(unittest.TestCase):
         )
         logger = commonlog(config)
         # Mock the provider to avoid actual API calls
-        with patch('commonlog.providers.LarkProvider') as mock_lark:
+        with patch('providers.LarkProvider') as mock_lark:
             mock_instance = Mock()
             mock_lark.return_value = mock_instance
             logger.custom_send("lark", AlertLevel.ERROR, "Custom provider test")
@@ -165,8 +165,8 @@ class Testcommonlog(unittest.TestCase):
             channel="#test"
         )
         logger = commonlog(config)
-        # Should default to Slack for unknown provider
-        with patch.object(logger.provider, 'send') as mock_send:
+        # Should default to Slack for unknown provider without raising exception
+        with patch('providers.SlackProvider.send') as mock_send:
             logger.custom_send("unknown", AlertLevel.ERROR, "Unknown provider test")
             mock_send.assert_called_once()
 
@@ -244,7 +244,7 @@ class Testcommonlog(unittest.TestCase):
         )
         logger = commonlog(config)
         # Mock the provider to raise an exception
-        with patch('commonlog.providers.LarkProvider') as mock_lark:
+        with patch('providers.LarkProvider') as mock_lark:
             mock_instance = Mock()
             mock_instance.send.side_effect = Exception("Test error")
             mock_lark.return_value = mock_instance
