@@ -280,8 +280,7 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 		}
 	}
 
-	messageContent, _ := json.Marshal(formatted)
-	return title, string(messageContent)
+	return title, formatted
 }
 
 func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
