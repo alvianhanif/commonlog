@@ -323,10 +323,20 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		"msg_type":   "interactive",
 		"content": map[string]interface{}{
 			"card": map[string]interface{}{
-				"elements": []map[string]interface{}{
-					{
-						"tag":     "markdown",
-						"content": formattedMessage,
+				"header": map[string]interface{}{
+					"template": "blue",
+					"title": map[string]interface{}{
+						"tag":     "plain_text",
+						"content": "Alert",
+					},
+				},
+				"elements": []interface{}{
+					map[string]interface{}{
+						"tag": "div",
+						"text": map[string]interface{}{
+							"tag":     "lark_md",
+							"content": formattedMessage,
+						},
 					},
 				},
 			},
@@ -382,10 +392,20 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 		"msg_type": "interactive",
 		"content": map[string]interface{}{
 			"card": map[string]interface{}{
-				"elements": []map[string]interface{}{
-					{
-						"tag":     "markdown",
-						"content": formattedMessage,
+				"header": map[string]interface{}{
+					"template": "blue",
+					"title": map[string]interface{}{
+						"tag":     "plain_text",
+						"content": "Alert",
+					},
+				},
+				"elements": []interface{}{
+					map[string]interface{}{
+						"tag": "div",
+						"text": map[string]interface{}{
+							"tag":     "lark_md",
+							"content": formattedMessage,
+						},
 					},
 				},
 			},

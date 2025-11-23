@@ -170,14 +170,24 @@ class LarkProvider(Provider):
         payload = {
             "receive_id": chat_id,
             "msg_type": "interactive",
-            "content":{
+            "content": {
                 "card": {
-                "elements": [
-                    {
-                        "tag": "markdown",
-                        "content": formatted_message
-                    }
-                ]
+                    "header": {
+                        "template": "blue",
+                        "title": {
+                            "tag": "plain_text",
+                            "content": "Alert"
+                        }
+                    },
+                    "elements": [
+                        {
+                            "tag": "div",
+                            "text": {
+                                "tag": "lark_md",
+                                "content": formatted_message
+                            }
+                        }
+                    ]
                 }
             }
         }
@@ -203,14 +213,24 @@ class LarkProvider(Provider):
         debug_log(config, "send_lark_webhook: using webhook URL")
         payload = {
             "msg_type": "interactive",
-            "content":{
+            "content": {
                 "card": {
-                "elements": [
-                    {
-                        "tag": "markdown",
-                        "content": formatted_message
-                    }
-                ]
+                    "header": {
+                        "template": "blue",
+                        "title": {
+                            "tag": "plain_text",
+                            "content": "Alert"
+                        }
+                    },
+                    "elements": [
+                        {
+                            "tag": "div",
+                            "text": {
+                                "tag": "lark_md",
+                                "content": formatted_message
+                            }
+                        }
+                    ]
                 }
             }
         }
