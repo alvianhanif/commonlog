@@ -1,9 +1,5 @@
 import unittest
-import sys
-import os
-sys.path.insert(0, os.path.dirname(__file__))
-from logger import commonlog
-from log_types import Config, SendMethod, AlertLevel, Attachment
+from commonlog import Config, SendMethod, AlertLevel, Attachment, commonlog
 
 class Testcommonlog(unittest.TestCase):
     def test_init(self):
