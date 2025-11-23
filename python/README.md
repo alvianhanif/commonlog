@@ -151,6 +151,7 @@ class CustomResolver(ChannelResolver):
 - **channel_resolver**: Optional resolver for dynamic channel mapping
 - **service_name**: Name of the service sending alerts
 - **environment**: Environment (dev, staging, production)
+- **debug**: `True` to enable detailed debug logging of all internal processes
 
 ### Provider-Specific
 

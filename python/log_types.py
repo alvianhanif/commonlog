@@ -37,7 +37,7 @@ class LarkToken:
         self.app_secret = app_secret
 
 class Config:
-    def __init__(self, provider, send_method, token=None, slack_token=None, lark_token=None, channel=None, channel_resolver=None, service_name=None, environment=None, redis_host=None, redis_port=None):
+    def __init__(self, provider, send_method, token=None, slack_token=None, lark_token=None, channel=None, channel_resolver=None, service_name=None, environment=None, redis_host=None, redis_port=None, debug=False):
         self.provider = provider
         self.send_method = send_method
         self.token = token
@@ -49,8 +49,22 @@ class Config:
         self.environment = environment
         self.redis_host = redis_host
         self.redis_port = redis_port
+        self.debug = debug
 
 class Provider(ABC):
     @abstractmethod
-    def send(self, level, message, attachment, config):
+    def send_to_channel(self, level, message, attachment, config, channel):
         pass
+
+# Debug logging
+import logging
+
+debug_logger = logging.getLogger('commonlog.debug')
+debug_logger.setLevel(logging.DEBUG)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('[COMMONLOG DEBUG] %(filename)s:%(lineno)d - %(message)s'))
+debug_logger.addHandler(handler)
+
+def debug_log(config, message, *args):
+    if hasattr(config, 'debug') and config.debug:
+        debug_logger.debug(message, *args)

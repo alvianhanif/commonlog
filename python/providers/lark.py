@@ -3,7 +3,7 @@ Lark Provider for commonlog
 """
 import requests
 import json
-from ..log_types import SendMethod, Provider
+from ..log_types import SendMethod, Provider, debug_log
 from .redis_client import get_redis_client, RedisConfigError
 
 class LarkProvider(Provider):
@@ -113,13 +113,18 @@ class LarkProvider(Provider):
         raise Exception(f"Channel '{channel_name}' not found")
 
     def send(self, level, message, attachment, config):
+        debug_log(config, f"LarkProvider.send called with level: {level}, send method: {config.send_method}")
         formatted_message = self._format_message(message, attachment, config)
         if config.send_method == SendMethod.WEBCLIENT:
+            debug_log(config, "Using Lark webclient method")
             self._send_lark_webclient(formatted_message, config)
         elif config.send_method == SendMethod.WEBHOOK:
+            debug_log(config, "Using Lark webhook method")
             self._send_lark_webhook(formatted_message, config)
         else:
-            raise ValueError(f"Unknown send method for Lark: {config.send_method}")
+            error_msg = f"Unknown send method for Lark: {config.send_method}"
+            debug_log(config, f"Error: {error_msg}")
+            raise ValueError(error_msg)
 
     def _format_message(self, message, attachment, config):
         formatted = ""
@@ -139,40 +144,62 @@ class LarkProvider(Provider):
         return json.dumps(formatted)
 
     def _send_lark_webclient(self, formatted_message, config):
+        debug_log(config, "send_lark_webclient: preparing API request")
         token = config.token
         
         # Use lark_token if available, otherwise fall back to token parsing
         if config.lark_token and config.lark_token.app_id and config.lark_token.app_secret:
+            debug_log(config, "send_lark_webclient: fetching tenant access token using lark_token")
             token = self.get_tenant_access_token(config, config.lark_token.app_id, config.lark_token.app_secret)
+            debug_log(config, "send_lark_webclient: tenant access token fetched")
         elif token and len(token) < 100 and "++" in token:
             # If token is in "app_id++app_secret" format, fetch the tenant_access_token
+            debug_log(config, "send_lark_webclient: parsing token in app_id++app_secret format")
             parts = token.split("++")
             if len(parts) == 2:
                 token = self.get_tenant_access_token(config, parts[0], parts[1])
+                debug_log(config, "send_lark_webclient: tenant access token fetched from parsed token")
         
         # Get chat_id from channel name
+        debug_log(config, f"send_lark_webclient: resolving chat_id for channel '{config.channel}'")
         chat_id = self.get_chat_id_from_channel_name(config, token, config.channel)
+        debug_log(config, f"send_lark_webclient: resolved chat_id")
         
         url = "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         content = json.dumps({"text": formatted_message})
         payload = {"receive_id": chat_id, "msg_type": "text", "content": content}
+        debug_log(config, f"send_lark_webclient: sending HTTP request, payload size: {len(str(payload))}")
+        
         response = requests.post(url, headers=headers, json=payload)
+        debug_log(config, f"send_lark_webclient: response status: {response.status_code}")
         if response.status_code != 200:
-            raise Exception(f"Lark WebClient response: {response.status_code}")
+            error_msg = f"Lark WebClient response: {response.status_code}"
+            debug_log(config, f"send_lark_webclient: error: {error_msg}")
+            raise Exception(error_msg)
+        debug_log(config, "send_lark_webclient: message sent successfully")
 
     def _send_lark_webhook(self, formatted_message, config):
+        debug_log(config, "send_lark_webhook: preparing webhook request")
         # For webhook, the token field contains the webhook URL
         webhook_url = config.token
         if not webhook_url:
-            raise Exception("Webhook URL is required for Lark webhook method")
+            error_msg = "Webhook URL is required for Lark webhook method"
+            debug_log(config, f"Error: {error_msg}")
+            raise Exception(error_msg)
         
+        debug_log(config, "send_lark_webhook: using webhook URL")
         payload = {
             "msg_type": "text",
             "content": {
                 "text": formatted_message
             }
         }
+        debug_log(config, f"send_lark_webhook: payload prepared, size: {len(str(payload))}")
         response = requests.post(webhook_url, json=payload)
+        debug_log(config, f"send_lark_webhook: response status: {response.status_code}, response data: {response.text}")
         if response.status_code != 200:
-            raise Exception(f"Lark webhook response: {response.status_code}")
+            error_msg = f"Lark webhook response: {response.status_code}"
+            debug_log(config, f"send_lark_webhook: error: {error_msg}")
+            raise Exception(error_msg)
+        debug_log(config, "send_lark_webhook: webhook sent successfully")

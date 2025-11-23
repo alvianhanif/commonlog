@@ -2,12 +2,27 @@
 // supporting multiple providers like Slack and Lark with various send methods.
 package types
 
+import (
+	"log"
+	"os"
+)
+
 // AlertLevel defines the severity of the alert
 const (
 	INFO = iota
 	WARN
 	ERROR
 )
+
+// DebugLogger provides centralized debug logging
+var DebugLogger = log.New(os.Stdout, "[COMMONLOG DEBUG] ", log.LstdFlags|log.Lshortfile)
+
+// DebugLog logs debug information if debug mode is enabled
+func DebugLog(cfg Config, format string, args ...interface{}) {
+	if cfg.Debug {
+		DebugLogger.Printf(format, args...)
+	}
+}
 
 // SendMethod defines supported sending methods
 const (
@@ -46,6 +61,7 @@ type Config struct {
 	Environment     string          // Environment (dev, staging, production)
 	RedisHost       string          // Redis host for token caching
 	RedisPort       string          // Redis port for token caching
+	Debug           bool            // Enable debug logging for all processes
 }
 
 // LarkTokenConfig holds Lark app credentials

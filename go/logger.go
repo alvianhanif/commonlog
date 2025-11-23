@@ -31,8 +31,13 @@ type Logger struct {
 
 // NewLogger creates a new Logger with the appropriate provider
 func NewLogger(cfg types.Config) *Logger {
-	providerName := createProvider(cfg.Provider)
-	return &Logger{config: cfg, provider: providerName}
+	provider := createProvider(cfg.Provider)
+	logger := &Logger{config: cfg, provider: provider}
+
+	types.DebugLog(cfg, "Created new logger with provider: %s, send method: %s, debug: %t",
+		cfg.Provider, cfg.SendMethod, cfg.Debug)
+
+	return logger
 }
 
 // resolveChannel resolves the channel for the given alert level
@@ -50,20 +55,28 @@ func (l *Logger) Send(level int, message string, attachment *types.Attachment, t
 
 // SendToChannel sends a message to a specific channel, overriding the default/channel resolver
 func (l *Logger) SendToChannel(level int, message string, attachment *types.Attachment, trace string, channel string) error {
+	types.DebugLog(l.config, "SendToChannel called with level: %d, message length: %d, channel: %s, has attachment: %t, has trace: %t",
+		level, len(message), channel, attachment != nil, trace != "")
+
 	if level == types.INFO {
 		log.Printf("[INFO] %s", message)
+		types.DebugLog(l.config, "INFO level message logged locally, skipping provider send")
 		return nil
 	}
 
 	resolvedChannel := channel
 	if resolvedChannel == "" {
 		resolvedChannel = l.resolveChannel(level)
+		types.DebugLog(l.config, "Resolved channel using resolver: %s", resolvedChannel)
+	} else {
+		types.DebugLog(l.config, "Using provided channel: %s", resolvedChannel)
 	}
 
 	sendConfig := l.config
 	sendConfig.Channel = resolvedChannel
 
 	if trace != "" {
+		types.DebugLog(l.config, "Processing trace attachment, trace length: %d", len(trace))
 		traceAttachment := &types.Attachment{
 			FileName: "trace.log",
 			Content:  trace,
@@ -71,40 +84,59 @@ func (l *Logger) SendToChannel(level int, message string, attachment *types.Atta
 		if attachment != nil {
 			if attachment.Content != "" {
 				attachment.Content += "\n\n--- Trace Log ---\n" + trace
+				types.DebugLog(l.config, "Appended trace to existing attachment content")
 			} else {
 				attachment.Content = trace
 				attachment.FileName = "trace.log"
+				types.DebugLog(l.config, "Set trace as attachment content")
 			}
 		} else {
 			attachment = traceAttachment
+			types.DebugLog(l.config, "Created new trace attachment")
 		}
 	}
 
-	return l.provider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel)
+	types.DebugLog(l.config, "Calling provider.SendToChannel with resolved channel: %s", resolvedChannel)
+	err := l.provider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel)
+	if err != nil {
+		types.DebugLog(l.config, "Provider.SendToChannel failed: %v", err)
+	} else {
+		types.DebugLog(l.config, "Provider.SendToChannel completed successfully")
+	}
+	return err
 }
 
 // CustomSend sends a message with a custom provider, allowing override of the default provider
 func (l *Logger) CustomSend(provider string, level int, message string, attachment *types.Attachment, trace string, channel string) error {
+	types.DebugLog(l.config, "CustomSend called with custom provider: %s, level: %d, message length: %d",
+		provider, level, len(message))
+
 	customProvider := createProvider(provider)
 	if customProvider == nil {
 		log.Printf("[ERROR] Unknown provider: %s, defaulting to slack", provider)
 		customProvider = createProvider("slack")
+		types.DebugLog(l.config, "Unknown provider '%s', defaulted to slack", provider)
+	} else {
+		types.DebugLog(l.config, "Created custom provider: %s", provider)
 	}
 
 	if level == types.INFO {
 		log.Printf("[INFO] %s", message)
+		types.DebugLog(l.config, "INFO level message logged locally for custom provider, skipping send")
 		return nil
 	}
 
 	resolvedChannel := channel
 	if resolvedChannel == "" {
 		resolvedChannel = l.resolveChannel(level)
+		types.DebugLog(l.config, "Resolved channel for custom send: %s", resolvedChannel)
 	}
 
 	sendConfig := l.config
 	sendConfig.Channel = resolvedChannel
 
 	if trace != "" {
+		types.DebugLog(l.config, "Processing trace for custom send, trace length: %d", len(trace))
 		traceAttachment := &types.Attachment{
 			FileName: "trace.log",
 			Content:  trace,
@@ -121,5 +153,12 @@ func (l *Logger) CustomSend(provider string, level int, message string, attachme
 		}
 	}
 
-	return customProvider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel)
+	types.DebugLog(l.config, "Calling custom provider.SendToChannel with provider: %s, channel: %s", provider, resolvedChannel)
+	err := customProvider.SendToChannel(level, message, attachment, sendConfig, resolvedChannel)
+	if err != nil {
+		types.DebugLog(l.config, "Custom provider.SendToChannel failed: %v", err)
+	} else {
+		types.DebugLog(l.config, "Custom provider.SendToChannel completed successfully")
+	}
+	return err
 }

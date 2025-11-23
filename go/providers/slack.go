@@ -17,15 +17,22 @@ func (p *SlackProvider) Send(level int, message string, attachment *types.Attach
 }
 
 func (p *SlackProvider) SendToChannel(level int, message string, attachment *types.Attachment, cfg types.Config, channel string) error {
+	types.DebugLog(cfg, "SlackProvider.SendToChannel called with level: %d, send method: %s, channel: %s",
+		level, cfg.SendMethod, channel)
+
 	cfgCopy := cfg
 	cfgCopy.Channel = channel
 	switch cfgCopy.SendMethod {
 	case types.MethodWebClient:
+		types.DebugLog(cfg, "Using Slack webclient method")
 		return p.sendSlackWebClient(message, attachment, cfgCopy)
 	case types.MethodWebhook:
+		types.DebugLog(cfg, "Using Slack webhook method")
 		return p.sendSlackWebhook(message, attachment, cfgCopy)
 	default:
-		return fmt.Errorf("unknown send method for Slack: %s", cfgCopy.SendMethod)
+		err := fmt.Errorf("unknown send method for Slack: %s", cfgCopy.SendMethod)
+		types.DebugLog(cfg, "Error: %v", err)
+		return err
 	}
 }
 
@@ -63,13 +70,17 @@ func (p *SlackProvider) formatMessage(message string, attachment *types.Attachme
 }
 
 func (p *SlackProvider) sendSlackWebhook(message string, attachment *types.Attachment, cfg types.Config) error {
+	types.DebugLog(cfg, "sendSlackWebhook: formatting message and preparing webhook request")
 	formattedMessage := p.formatMessage(message, attachment, cfg)
 
 	// For webhook, the token field contains the webhook URL
 	webhookURL := cfg.Token
 	if webhookURL == "" {
-		return fmt.Errorf("webhook URL is required for Slack webhook method")
+		err := fmt.Errorf("webhook URL is required for Slack webhook method")
+		types.DebugLog(cfg, "Error: %v", err)
+		return err
 	}
+	types.DebugLog(cfg, "sendSlackWebhook: using webhook URL (length: %d), channel: %s", len(webhookURL), cfg.Channel)
 
 	payload := map[string]interface{}{
 		"text": formattedMessage,
@@ -80,13 +91,15 @@ func (p *SlackProvider) sendSlackWebhook(message string, attachment *types.Attac
 	}
 
 	data, _ := json.Marshal(payload)
-	fmt.Printf("[SlackProvider] Sending webhook to URL: %s, payload: %s\n", webhookURL, string(data))
+	types.DebugLog(cfg, "sendSlackWebhook: payload prepared, size: %d bytes", len(data))
+
 	req, _ := http.NewRequest("POST", webhookURL, bytes.NewBuffer(data))
 	req.Header.Set("Content-Type", "application/json")
 
+	types.DebugLog(cfg, "sendSlackWebhook: sending HTTP request to webhook URL")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("[SlackProvider] Error sending webhook request: %v\n", err)
+		types.DebugLog(cfg, "sendSlackWebhook: HTTP request failed: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -94,22 +107,28 @@ func (p *SlackProvider) sendSlackWebhook(message string, attachment *types.Attac
 	// Log response data
 	respData := new(bytes.Buffer)
 	respData.ReadFrom(resp.Body)
-	fmt.Printf("[SlackProvider] Slack webhook response status: %d, body: %s\n", resp.StatusCode, respData.String())
+	types.DebugLog(cfg, "sendSlackWebhook: response status: %d, body length: %d, body: %s", resp.StatusCode, respData.Len(), respData.String())
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("slack webhook response: %d", resp.StatusCode)
+		err := fmt.Errorf("slack webhook response: %d", resp.StatusCode)
+		types.DebugLog(cfg, "sendSlackWebhook: error response: %v", err)
+		return err
 	}
-	fmt.Println("[SlackProvider] Webhook sent successfully")
+	types.DebugLog(cfg, "sendSlackWebhook: webhook sent successfully")
 	return nil
 }
 
 func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
+	types.DebugLog(cfg, "sendSlackWebClient: formatting message and preparing API request")
 	formattedMessage := p.formatMessage(message, attachment, cfg)
 
 	// Use SlackToken if available, otherwise fall back to Token
 	token := cfg.Token
 	if cfg.SlackToken != "" {
 		token = cfg.SlackToken
+		types.DebugLog(cfg, "sendSlackWebClient: using SlackToken (length: %d)", len(token))
+	} else {
+		types.DebugLog(cfg, "sendSlackWebClient: using Token (length: %d)", len(token))
 	}
 
 	url := "https://slack.com/api/chat.postMessage"
@@ -119,14 +138,17 @@ func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Att
 		"text":    formattedMessage,
 	}
 	data, _ := json.Marshal(payload)
-	fmt.Printf("[SlackProvider] Sending to channel: %s, payload: %s\n", cfg.Channel, string(data))
+	types.DebugLog(cfg, "sendSlackWebClient: sending to channel: %s, payload size: %d bytes", cfg.Channel, len(data))
+
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
+
+	types.DebugLog(cfg, "sendSlackWebClient: sending HTTP request to Slack API")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("[SlackProvider] Error sending request: %v\n", err)
+		types.DebugLog(cfg, "sendSlackWebClient: HTTP request failed: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -134,11 +156,13 @@ func (p *SlackProvider) sendSlackWebClient(message string, attachment *types.Att
 	// Log response data
 	respData := new(bytes.Buffer)
 	respData.ReadFrom(resp.Body)
-	fmt.Printf("[SlackProvider] Slack WebClient response status: %d, body: %s\n", resp.StatusCode, respData.String())
+	types.DebugLog(cfg, "sendSlackWebClient: response status: %d, body length: %d, body: %s", resp.StatusCode, respData.Len(), respData.String())
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("slack WebClient response: %d", resp.StatusCode)
+		err := fmt.Errorf("slack WebClient response: %d", resp.StatusCode)
+		types.DebugLog(cfg, "sendSlackWebClient: error response: %v", err)
+		return err
 	}
-	fmt.Println("[SlackProvider] Message sent successfully")
+	types.DebugLog(cfg, "sendSlackWebClient: message sent successfully")
 	return nil
 }

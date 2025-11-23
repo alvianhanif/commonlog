@@ -168,6 +168,7 @@ func (r *CustomResolver) ResolveChannel(level int) string {
 - **ChannelResolver**: Optional resolver for dynamic channel mapping
 - **ServiceName**: Name of the service sending alerts
 - **Environment**: Environment (dev, staging, production)
+- **Debug**: `true` to enable detailed debug logging of all internal processes
 
 ### Provider-Specific
 

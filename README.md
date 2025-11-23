@@ -20,6 +20,7 @@ Available in [Go](./go/README.md) and [Python](./python/README.md).
 - **Send to Specific Channel**: Use `SendToChannel` (Go) or `send_to_channel` (Python) to override the default channel for any alert.
 - **Redis Token Caching for Lark**: Lark tenant_access_token is cached in Redis for performance. Expiry is set dynamically from the API response minus 10 minutes.
 - **Environment-Aware Chat ID Caching**: Lark chat IDs are cached per environment to prevent cross-environment conflicts.
+- **Debug Mode**: Enable detailed logging of all internal processes and values for troubleshooting
 
 ## Redis Configuration (Lark)
 
@@ -89,6 +90,44 @@ logger.CustomSend("slack", commonlog.ERROR, "Message via Slack", nil, "", "slack
 ```python
 logger.custom_send("slack", AlertLevel.ERROR, "Message via Slack", channel="slack-channel")
 ```
+
+## Debug Mode
+
+Enable debug mode to get detailed logging of all internal processes and values for troubleshooting:
+
+**Go:**
+
+```go
+config := commonlog.Config{
+    Provider:   "slack",
+    SendMethod: commonlog.MethodWebhook,
+    Token:      "https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    Debug:      true,  // Enable debug logging
+}
+```
+
+**Python:**
+
+```python
+config = Config(
+    provider="slack",
+    send_method=SendMethod.WEBHOOK,
+    token="https://hooks.slack.com/services/YOUR/WEBHOOK/URL",
+    debug=True,  # Enable debug logging
+)
+```
+
+When debug mode is enabled, commonlog will log:
+
+- Logger initialization details
+- Provider creation and method selection
+- Message formatting and processing
+- HTTP request/response details
+- Token fetching and caching operations
+- Channel resolution processes
+- Attachment handling
+
+Debug logs are prefixed with `[COMMONLOG DEBUG]` and include file location information.
 
 ## Documentation
 

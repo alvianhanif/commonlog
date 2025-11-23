@@ -231,15 +231,22 @@ func (p *LarkProvider) Send(level int, message string, attachment *types.Attachm
 }
 
 func (p *LarkProvider) SendToChannel(level int, message string, attachment *types.Attachment, cfg types.Config, channel string) error {
+	types.DebugLog(cfg, "LarkProvider.SendToChannel called with level: %d, send method: %s, channel: %s",
+		level, cfg.SendMethod, channel)
+
 	cfgCopy := cfg
 	cfgCopy.Channel = channel
 	switch cfgCopy.SendMethod {
 	case types.MethodWebClient:
+		types.DebugLog(cfg, "Using Lark webclient method")
 		return p.sendLarkWebClient(message, attachment, cfgCopy)
 	case types.MethodWebhook:
+		types.DebugLog(cfg, "Using Lark webhook method")
 		return p.sendLarkWebhook(message, attachment, cfgCopy)
 	default:
-		return fmt.Errorf("unknown send method for Lark: %s", cfgCopy.SendMethod)
+		err := fmt.Errorf("unknown send method for Lark: %s", cfgCopy.SendMethod)
+		types.DebugLog(cfg, "Error: %v", err)
+		return err
 	}
 }
 
@@ -277,32 +284,35 @@ func (p *LarkProvider) formatMessage(message string, attachment *types.Attachmen
 }
 
 func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attachment, cfg types.Config) error {
+	types.DebugLog(cfg, "sendLarkWebClient: formatting message and preparing API request")
 	formattedMessage := p.formatMessage(message, attachment, cfg)
 	token := cfg.Token
 
-	fmt.Printf("[Lark] Sending message to channel '%s' with method WebClient\n", cfg.Channel)
+	types.DebugLog(cfg, "sendLarkWebClient: sending to channel '%s'", cfg.Channel)
 
 	// Use LarkToken if available, otherwise fall back to Token parsing
 	var appID, appSecret string
 	if cfg.LarkToken.AppID != "" && cfg.LarkToken.AppSecret != "" {
 		appID = cfg.LarkToken.AppID
 		appSecret = cfg.LarkToken.AppSecret
-		fmt.Printf("[Lark] Fetching tenant access token for appID '%s'\n", appID)
+		types.DebugLog(cfg, "sendLarkWebClient: fetching tenant access token for appID (length: %d)", len(appID))
 		fetched, err := getTenantAccessToken(cfg, appID, appSecret)
 		if err != nil {
-			fmt.Printf("[Lark] Error fetching tenant access token: %v\n", err)
+			types.DebugLog(cfg, "sendLarkWebClient: error fetching tenant access token: %v", err)
 			return err
 		}
 		token = fetched
+		types.DebugLog(cfg, "sendLarkWebClient: tenant access token fetched successfully")
 	}
 
 	// Get chat_id from channel name
-	fmt.Printf("[Lark] Resolving chat_id for channel '%s'\nToken: %s\n", cfg.Channel, token)
+	types.DebugLog(cfg, "sendLarkWebClient: resolving chat_id for channel '%s'", cfg.Channel)
 	chatID, err := getChatIDFromChannelName(cfg, token, cfg.Channel)
 	if err != nil {
-		fmt.Printf("[Lark] Failed to get chat_id for channel '%s': %v\n", cfg.Channel, err)
+		types.DebugLog(cfg, "sendLarkWebClient: failed to get chat_id for channel '%s': %v", cfg.Channel, err)
 		return fmt.Errorf("failed to get chat_id for channel '%s': %v", cfg.Channel, err)
 	}
+	types.DebugLog(cfg, "sendLarkWebClient: resolved chat_id (length: %d)", len(chatID))
 
 	url := "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id"
 	headers := map[string]string{"Authorization": "Bearer " + token, "Content-Type": "application/json"}
@@ -316,14 +326,16 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 		"content":    contentStruct,
 	}
 	data, _ := json.Marshal(payload)
+
+	types.DebugLog(cfg, "sendLarkWebClient: sending HTTP request to Lark API, payload size: %d bytes", len(data))
 	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(data))
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	fmt.Printf("[Lark] Sending POST request to %s, Payload: %s\n", url, string(data))
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("[Lark] Error sending POST request: %v\n", err)
+		types.DebugLog(cfg, "sendLarkWebClient: HTTP request failed: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -332,28 +344,32 @@ func (p *LarkProvider) sendLarkWebClient(message string, attachment *types.Attac
 	respBody := new(bytes.Buffer)
 	_, copyErr := respBody.ReadFrom(resp.Body)
 	if copyErr != nil {
-		fmt.Printf("[Lark] Error reading response body: %v\n", copyErr)
+		types.DebugLog(cfg, "sendLarkWebClient: error reading response body: %v", copyErr)
 	} else {
-		fmt.Printf("[Lark] Response data: %s\n", respBody.String())
+		types.DebugLog(cfg, "sendLarkWebClient: response status: %d, body length: %d, body: %s", resp.StatusCode, respBody.Len(), respBody.String())
 	}
 
 	if resp.StatusCode != 200 {
-		fmt.Printf("[Lark] WebClient response status: %d\n", resp.StatusCode)
-		fmt.Printf("[Lark] Response data: %s\n", respBody.String())
-		return fmt.Errorf("lark WebClient response: %d", resp.StatusCode)
+		err := fmt.Errorf("lark WebClient response: %d", resp.StatusCode)
+		types.DebugLog(cfg, "sendLarkWebClient: error response: %v", err)
+		return err
 	}
-	fmt.Printf("[Lark] Message sent successfully to channel '%s'. Response: %s\n", cfg.Channel, respBody.String())
+	types.DebugLog(cfg, "sendLarkWebClient: message sent successfully to channel '%s'", cfg.Channel)
 	return nil
 }
 
 func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachment, cfg types.Config) error {
+	types.DebugLog(cfg, "sendLarkWebhook: formatting message and preparing webhook request")
 	formattedMessage := p.formatMessage(message, attachment, cfg)
 
 	// For webhook, the token field contains the webhook URL
 	webhookURL := cfg.Token
 	if webhookURL == "" {
-		return fmt.Errorf("webhook URL is required for Lark webhook method")
+		err := fmt.Errorf("webhook URL is required for Lark webhook method")
+		types.DebugLog(cfg, "Error: %v", err)
+		return err
 	}
+	types.DebugLog(cfg, "sendLarkWebhook: using webhook URL (length: %d)", len(webhookURL))
 
 	contentJSON, _ := json.Marshal(map[string]string{
 		"text": formattedMessage,
@@ -365,13 +381,15 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 	}
 
 	data, _ := json.Marshal(payload)
-	fmt.Printf("[Lark] Sending webhook to URL: %s, payload: %s\n", webhookURL, string(data))
+	types.DebugLog(cfg, "sendLarkWebhook: payload prepared, size: %d bytes", len(data))
+
 	req, _ := http.NewRequest("POST", webhookURL, bytes.NewBuffer(data))
 	req.Header.Set("Content-Type", "application/json")
 
+	types.DebugLog(cfg, "sendLarkWebhook: sending HTTP request to webhook URL")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("[Lark] Error sending webhook request: %v\n", err)
+		types.DebugLog(cfg, "sendLarkWebhook: HTTP request failed: %v", err)
 		return err
 	}
 	defer resp.Body.Close()
@@ -380,15 +398,16 @@ func (p *LarkProvider) sendLarkWebhook(message string, attachment *types.Attachm
 	respBody := new(bytes.Buffer)
 	_, copyErr := respBody.ReadFrom(resp.Body)
 	if copyErr != nil {
-		fmt.Printf("[Lark] Error reading response body: %v\n", copyErr)
+		types.DebugLog(cfg, "sendLarkWebhook: error reading response body: %v", copyErr)
 	} else {
-		fmt.Printf("[Lark] Response data: %s\n", respBody.String())
+		types.DebugLog(cfg, "sendLarkWebhook: response status: %d, body length: %d, body: %s", resp.StatusCode, respBody.Len(), respBody.String())
 	}
 
 	if resp.StatusCode != 200 {
-		fmt.Printf("[Lark] Webhook response status: %d\n", resp.StatusCode)
-		return fmt.Errorf("lark webhook response: %d", resp.StatusCode)
+		err := fmt.Errorf("lark webhook response: %d", resp.StatusCode)
+		types.DebugLog(cfg, "sendLarkWebhook: error response: %v", err)
+		return err
 	}
-	fmt.Printf("[Lark] Webhook sent successfully. Response: %s\n", respBody.String())
+	types.DebugLog(cfg, "sendLarkWebhook: webhook sent successfully")
 	return nil
 }
