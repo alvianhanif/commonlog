@@ -9,12 +9,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        # Note: Python 3.6 and 3.7 are not available on Ubuntu 24.04 (ubuntu-latest)
-        # If you need to support older Python versions, consider using ubuntu-20.04 or ubuntu-22.04
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        # Note: Using ubuntu-20.04 to support Python 3.6 and 3.7
+        # Ubuntu 24.04 (ubuntu-latest) does not have these older versions
 
     steps:
     - uses: actions/checkout@v4
