@@ -150,12 +150,10 @@ class Testcommonlog(unittest.TestCase):
             channel="#test"
         )
         logger = commonlog(config)
-        # Mock the provider to avoid actual API calls
-        with patch('providers.LarkProvider') as mock_lark:
-            mock_instance = Mock()
-            mock_lark.return_value = mock_instance
+        # Mock the LarkProvider.send method to avoid Redis connection
+        with patch('providers.LarkProvider.send') as mock_send:
             logger.custom_send("lark", AlertLevel.ERROR, "Custom provider test")
-            mock_instance.send.assert_called_once()
+            mock_send.assert_called_once()
 
     def test_custom_send_unknown_provider(self):
         config = Config(
@@ -244,10 +242,7 @@ class Testcommonlog(unittest.TestCase):
         )
         logger = commonlog(config)
         # Mock the provider to raise an exception
-        with patch('providers.LarkProvider') as mock_lark:
-            mock_instance = Mock()
-            mock_instance.send.side_effect = Exception("Test error")
-            mock_lark.return_value = mock_instance
+        with patch('providers.LarkProvider.send', side_effect=Exception("Test error")):
             with self.assertRaises(Exception):
                 logger.custom_send("lark", AlertLevel.ERROR, "Test message")
 
